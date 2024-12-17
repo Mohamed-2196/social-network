@@ -1,3 +1,7 @@
+import AuthPage from "./components/Sign";
 export default function Home() {
-  return <button className="btn btn-success">Hello World</button>;
+
+  return (
+    <AuthPage />
+  );
 }
