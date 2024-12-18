@@ -41,7 +41,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-base-200">
+    <>
 <Nav />
 
       <div className="container mx-auto flex flex-col md:flex-row gap-4 p-4">
@@ -152,6 +152,6 @@ export default function HomePage() {
           </div>
         </aside>
       </div>
-    </div>
+      </>
   );
 }
