@@ -78,9 +78,9 @@ export default function AuthPage() {
                 <label className="label">
                   <span className="label-text">Upload Avatar/Image (Optional)</span>
                 </label>
-                <input 
-                  type="file" 
-                  className="file-input file-input-bordered w-full bg-gray-200" 
+                <input
+  type="file"
+  className="file-input file-input-bordered file-input-primary w-full " 
                   accept="image/*"
                 />
               </div>

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import { FaUser, FaImage, FaBell, FaComments } from 'react-icons/fa';
+import Nav from "./nav"
+import { FaImage } from 'react-icons/fa';
 
 export default function HomePage() {
   const [posts, setPosts] = useState([
@@ -41,28 +42,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-base-200">
-      <nav className="navbar bg-base-100 shadow-lg">
-        <div className="flex-1">
-          <a className="btn btn-ghost normal-case text-xl">SocialApp</a>
-        </div>
-        <div className="flex-none gap-2">
-          <div className="form-control">
-            <input type="text" placeholder="Search users" className="input input-bordered w-24 md:w-auto" />
-          </div>
-          <button className="btn btn-ghost btn-circle">
-            <FaUser />
-          </button>
-          <button className="btn btn-ghost btn-circle">
-            <div className="indicator">
-              <FaBell />
-              <span className="badge badge-xs badge-primary indicator-item">3</span>
-            </div>
-          </button>
-          <button className="btn btn-ghost btn-circle">
-            <FaComments />
-          </button>
-        </div>
-      </nav>
+<Nav />
 
       <div className="container mx-auto flex flex-col md:flex-row gap-4 p-4">
         <aside className="w-full md:w-1/4">
