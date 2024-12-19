@@ -7,6 +7,3 @@ CREATE TABLE IF NOT EXISTS "comments" (
     "image" varchar(255) null,
     primary key ("comment_id")
 );
-
--- +migrate Down
-DROP TABLE comments;

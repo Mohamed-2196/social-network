@@ -1,0 +1,3 @@
+-- 000_init_schema.up.sql
+-- Empty file, or simply initialize the database with no tables.
+-- You can add your initial table creation here if needed, but this is just a placeholder.
