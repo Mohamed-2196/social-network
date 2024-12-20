@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"net/http" // Import migration package with alias db
 
+	migration "social/db"
+	handlers "social/handlers"
+
+	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
-	migration "github.com/yourusername/social-network/backend/db"
 )
 
 func main() {
@@ -21,13 +24,14 @@ func main() {
 		fmt.Println("Migration error:", err)
 		return
 	}
-
+	handlers.Migrations()
 	// Set up HTTP routing and handlers, passing db to handlers
-	mux := http.NewServeMux()
+	r := mux.NewRouter()
+	handlers.AddHandlers(r)
 	//handlers.AddHandlers(mux, db)
 
 	// Start the HTTP server
-	err = http.ListenAndServe(":8080", mux)
+	err = http.ListenAndServe(":8080", r)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}

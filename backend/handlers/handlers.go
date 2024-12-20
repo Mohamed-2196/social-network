@@ -1,9 +1,13 @@
 package handlers
 
 import (
-	"net/http"
+	"github.com/gorilla/mux"
 )
 
-func AddHandlers(mux *http.ServeMux) {
-	mux.HandleFunc("GET /group", HandleGroupChat)
+func AddHandlers(r *mux.Router) {
+	r.HandleFunc("/group", HandleGroupChat).Methods("POST") // Specify POST method
+	r.HandleFunc("/signup", SignUpHandler).Methods("POST")  // Specify POST method
+	r.HandleFunc("/signin", SignInHandler).Methods("POST")  // Specify POST method
+	r.HandleFunc("/logout", SignOutHandler).Methods("POST") // Specify POST method
+	r.HandleFunc("/cook", Validcookie).Methods("POST")       // Specify GET method
 }
