@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS "comments" (
-    "comment_id" VARCHAR(255) not null,
-    "post_id" VARCHAR(255) not null,
-    "created_at" datetime not null default CURRENT_TIMESTAMP,
-    "created_by" varchar(255) not null,
-    "content" text null,
-    "image" varchar(255) null,
-    primary key ("comment_id")
+    "comment_id" SERIAL PRIMARY KEY,  -- Auto-increment for comment_id
+    "post_id" INTEGER NOT NULL,
+    "user_id" INTEGER NOT NULL,  -- References the user who created the comment
+    "content" TEXT NOT NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("post_id") REFERENCES "posts"("post_id") ON DELETE CASCADE,
+    FOREIGN KEY ("user_id") REFERENCES "users"("user_id") ON DELETE CASCADE
 );
