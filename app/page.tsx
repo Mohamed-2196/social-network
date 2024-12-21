@@ -1,4 +1,4 @@
-import AuthPage from "./components/home";
+import AuthPage from "./components/Sign";
 export default function Home() {
 
   return (
