@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "group_messages" (
-    "id" SERIAL PRIMARY KEY,              
+    "groupmessage_id" INTEGER PRIMARY KEY,              
     "group_id" INTEGER NOT NULL,         
     "member_id" INTEGER NOT NULL,        
     "interaction" BOOLEAN DEFAULT FALSE,

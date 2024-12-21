@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "users" (
-    "user_id" SERIAL PRIMARY KEY,  -- Auto-increment for user_id
+    "user_id" INTEGER PRIMARY KEY,  -- Auto-increment for user_id
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "email" VARCHAR(255) NOT NULL UNIQUE,  -- Ensure email is unique
     "first_name" VARCHAR(255) NOT NULL,

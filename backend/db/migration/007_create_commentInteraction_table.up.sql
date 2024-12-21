@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "comment_interactions" (
-    "id" SERIAL PRIMARY KEY,                     -- Auto-incrementing ID as the primary key
+    "id" INTEGER PRIMARY KEY,                     -- Auto-incrementing ID as the primary key
     "comment_id" INTEGER NOT NULL,               -- References the related comment
     "post_id" INTEGER NOT NULL,                  -- References the related post
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Timestamp for when the interaction was created

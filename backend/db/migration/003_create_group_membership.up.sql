@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "group_membership" (
-    "id" SERIAL PRIMARY KEY,
+    "membership_id" INTEGER PRIMARY KEY,
     "group_id" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,  -- Referencing user_id
     "joined_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

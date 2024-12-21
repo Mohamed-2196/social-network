@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "messages" (
-    "message_id" SERIAL PRIMARY KEY,  -- Auto-increment for message_id
+    "message_id" INTEGER PRIMARY KEY,  -- Auto-increment for message_id
     "sender_id" INTEGER NOT NULL,
     "receiver_id" INTEGER NOT NULL,
     "type" VARCHAR(255) NOT NULL,

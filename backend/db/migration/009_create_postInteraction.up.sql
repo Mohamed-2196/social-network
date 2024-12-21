@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "post_interaction" (
-    "id" SERIAL PRIMARY KEY,                      -- Auto-incrementing primary key
+    "id" INTEGER PRIMARY KEY,                      -- Auto-incrementing primary key
     "post_id" INTEGER NOT NULL,                   -- References the related post
     "user_id" INTEGER NOT NULL,                   -- References the user
     "interaction" BOOLEAN DEFAULT FALSE,          -- Tracks interaction (like/dislike)
