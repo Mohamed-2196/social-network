@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS "users" (
     "birthday" DATE NOT NULL,
     "image" VARCHAR(255),
     "about" TEXT,
-    "password" VARCHAR(255) NOT NULL
+    "password" VARCHAR(255) NOT NULL,
+    "private" BOOLEAN NOT NULL DEFAULT FALSE  -- Added private field
 );
