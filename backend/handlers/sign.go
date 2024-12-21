@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"time"
 
@@ -37,7 +38,22 @@ type session struct {
 
 var sessions = make(map[string]session)
 
+// CORS middleware
+func enableCORS(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000") // Your frontend URL
+    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+    w.Header().Set("Access-Control-Allow-Credentials", "true") // Important to include cookies
+
+    // Handle preflight requests
+    if r.Method == http.MethodOptions {
+        w.WriteHeader(http.StatusNoContent)
+        return
+    }
+}
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w, r) // Enable CORS for this endpoint
+
 	err := r.ParseMultipartForm(10 << 20) // 10 MB max
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -101,7 +117,8 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    sessionToken,
 		Path:     "/",
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
+        SameSite: http.SameSiteLaxMode,
+        Secure:   false,
 	})
 
 	w.WriteHeader(http.StatusOK)
@@ -109,52 +126,70 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignInHandler(w http.ResponseWriter, r *http.Request) {
-	var creds Credentials
-	err := json.NewDecoder(r.Body).Decode(&creds)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	enableCORS(w, r) // Enable CORS for this endpoint
+
+
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	fmt.Println(email)
+	fmt.Println(password)
+	// Validate input
+	if email == "" || password == "" {
+		http.Error(w, "Email and password are required", http.StatusBadRequest)
 		return
 	}
 
 	var storedPassword string
-	err = DB.QueryRow("SELECT password FROM users WHERE email = ?", creds.Email).Scan(&storedPassword)
+	// Query the database for the stored password
+	err := DB.QueryRow("SELECT password FROM users WHERE email = ?", email).Scan(&storedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "User not found", http.StatusUnauthorized)
+			fmt.Println(err)
 		} else {
 			http.Error(w, "Server error", http.StatusInternalServerError)
+			fmt.Println(err)
 		}
 		return
 	}
 
-	if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(creds.Password)); err != nil {
+	// Compare the provided password with the stored password
+	if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)); err != nil {
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		fmt.Println(err)
 		return
 	}
-	userid, err := getUserIDByEmail(creds.Email)
+
+	// Get user ID by email
+	userid, err := getUserIDByEmail(email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(err)
 		return
 	}
+
+	// Create a new session token
 	sessionToken := uuid.NewString()
+	sessions[sessionToken] = session{id: userid}
 
-	sessions[sessionToken] = session{
-		id: userid,
-	}
-
+	// Set the session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
 		Value:    sessionToken,
 		Path:     "/",
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   false,
 	})
 
+	// Respond with a success message
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Signed in successfully"})
 }
 
 func SignOutHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w, r) // Enable CORS for this endpoint
+
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -179,6 +214,8 @@ func SignOutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Validcookie(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w, r) // Enable CORS for this endpoint
+
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -189,9 +226,12 @@ func Validcookie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sessionToken := c.Value
+	fmt.Println("this is session of request", sessionToken)
+	fmt.Println("this is sessions", sessions)
 
-	session, exists := sessions[sessionToken]
-	if exists {
+	session := sessions[sessionToken]
+	fmt.Println(session)
+	if session.id>0 {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "Valid session",
@@ -215,21 +255,30 @@ func getUserIDByEmail(email string) (int, error) {
 }
 
 func saveFile(file multipart.File, handler *multipart.FileHeader) (string, error) {
+	// Create the uploads directory if it doesn't exist
 	err := os.MkdirAll("./uploads", os.ModePerm)
 	if err != nil {
 		return "", err
 	}
 
-	dst, err := os.Create(fmt.Sprintf("./uploads/%s", handler.Filename))
+	// Get the original file extension
+	ext := path.Ext(handler.Filename)
+
+	// Generate a unique filename (UUID or timestamp)
+	uniqueFilename := fmt.Sprintf("%s%s", uuid.NewString(), ext)
+
+	// Create the destination file path
+	dst, err := os.Create(fmt.Sprintf("./uploads/%s", uniqueFilename))
 	if err != nil {
 		return "", err
 	}
 	defer dst.Close()
 
+	// Copy the file contents
 	_, err = io.Copy(dst, file)
 	if err != nil {
 		return "", err
 	}
 
-	return handler.Filename, nil
+	return uniqueFilename, nil // Return the unique filename instead of the original
 }
