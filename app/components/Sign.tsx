@@ -45,7 +45,10 @@ export default function AuthPage() {
         method: 'POST',
         body: formDataToSend,
       });
-
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
       if (response.ok) {
         const data = await response.json();
         console.log('Success:', data);

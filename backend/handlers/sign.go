@@ -103,7 +103,8 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
-	w.WriteHeader(http.StatusCreated)
+
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User created successfully"})
 }
 
