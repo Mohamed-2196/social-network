@@ -1,5 +1,7 @@
-'use client';
+"use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { generateFromEmail, generateUsername } from "unique-username-generator";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -11,10 +13,13 @@ export default function AuthPage() {
     password: '',
     nickname: '',
     aboutMe: '',
-    avatar: null
+    avatar: null,
   });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // New loading state
 
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+  const router = useRouter();
 
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp);
@@ -22,19 +27,29 @@ export default function AuthPage() {
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: files ? files[0] : value
+      [name]: files ? files[0] : value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // Start loading
+
+    // Generate a nickname if it's empty
+    if (isSignUp && !formData.nickname) {
+      const generatedNickname = generateUsername();
+      setFormData((prevState) => ({
+        ...prevState,
+        nickname: generatedNickname,
+      }));
+    }
 
     const url = isSignUp ? `${serverUrl}/signup` : `${serverUrl}/signin`;
     const formDataToSend = new FormData();
 
-    Object.keys(formData).forEach(key => {
+    Object.keys(formData).forEach((key) => {
       if (formData[key] !== null && formData[key] !== '') {
         formDataToSend.append(key, formData[key]);
       }
@@ -44,22 +59,23 @@ export default function AuthPage() {
       const response = await fetch(url, {
         method: 'POST',
         body: formDataToSend,
+        credentials: "include",
       });
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Response error:', errorData);
         throw new Error(errorData.message);
       }
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Success:', data);
-        // Handle successful sign up/in here (e.g., redirect, store token, etc.)
-      } else {
-        console.error('Server Error:', response.statusText);
-        // Handle server errors here
-      }
+
+      const data = await response.json();
+      console.log('Success:', data);
+      router.push('/');
     } catch (error) {
       console.error('Network Error:', error);
-      // Handle network errors here
+      setErrorMessage(error.message);
+    } finally {
+      setIsLoading(false); // Stop loading
     }
   };
 
@@ -69,6 +85,11 @@ export default function AuthPage() {
         <h2 className="text-4xl font-extrabold text-center text-indigo-700 mb-6">
           {isSignUp ? "Join Us" : "Welcome Back"}
         </h2>
+        {errorMessage && (
+          <div className="text-red-500 text-center mb-4">
+            {errorMessage}
+          </div>
+        )}
         <form className="space-y-4" onSubmit={handleSubmit} encType="multipart/form-data">
           {isSignUp && (
             <>
@@ -157,8 +178,16 @@ export default function AuthPage() {
               </div>
             </>
           )}
-          <button type="submit" className="btn btn-primary w-full mt-4 mb-6 p-3 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition duration-200">
-            {isSignUp ? "Sign Up" : "Sign In"}
+          <button 
+            type="submit" 
+            className={`btn btn-primary w-full mt-4 mb-6 p-3 rounded-md ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'} text-white transition duration-200`} 
+            disabled={isLoading} // Disable button when loading
+          >
+            {isLoading ? (
+              <span className="loading loading-dots"></span> // Loading dots
+            ) : (
+              isSignUp ? "Sign Up" : "Sign In"
+            )}
           </button>
         </form>
         <p className="text-center mt-4 text-gray-600">
