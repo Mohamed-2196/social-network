@@ -1,49 +1,80 @@
 'use client';
 import React, { useState } from 'react';
-import Nav from "./nav"
+import Nav from "./nav";
 import { FaImage } from 'react-icons/fa';
 
 export default function HomePage() {
   const [posts, setPosts] = useState([
     { id: 1, user: 'Yousif', content: 'I am just a gay boy!', privacy: 'public', avatar: '' },
   ]);
+  const [postData, setPostData] = useState({
+    content: '',
+    privacy: 'public',
+    image: null,
+  });
 
-  const [newPost, setNewPost] = useState('');
-  const [postPrivacy, setPostPrivacy] = useState('public');
-  const [postImage, setPostImage] = useState(null);
+  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-  const handlePostSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (newPost.trim() || postImage) {
-      const post = {
-        id: posts.length + 1,
-        user: 'CurrentUser',
-        content: newPost,
-        privacy: postPrivacy,
-        avatar: '/avatars/current-user.jpg',
-        image: postImage,
-      };
-      setPosts([post, ...posts]);
-      setNewPost('');
-      setPostImage(null);
-    }
-  };
-
-  const handleImageUpload = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPostImage(reader.result);
+        setPostData({ ...postData, image: reader.result });
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handlePostSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!postData.content.trim() && !postData.image) {
+      return;
+    }
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('content', postData.content);
+      formDataToSend.append('privacy', postData.privacy);
+      if (postData.image) {
+        formDataToSend.append('image', postData.image);
+      }
+
+      const response = await fetch(`${serverUrl}/createpost`, {
+        method: 'POST',
+        body: formDataToSend,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.json();
+        console.error('Error response:', response.status, errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Post created successfully", data);
+
+      const newPost = {
+        id: posts.length + 1,
+        user: 'CurrentUser',
+        content: postData.content,
+        privacy: postData.privacy,
+        avatar: '/avatars/current-user.jpg',
+        image: postData.image,
+      };
+
+      setPosts([newPost, ...posts]);
+      setPostData({ content: '', privacy: 'public', image: null });
+    } catch (error) {
+      console.error('Error submitting post:', error);
+    }
+  };
+
   return (
     <>
-<Nav />
-
+      <Nav />
       <div className="container mx-auto flex flex-col md:flex-row gap-4 p-4">
         <aside className="w-full md:w-1/4">
           <div className="card bg-base-100 shadow-xl">
@@ -67,7 +98,6 @@ export default function HomePage() {
             </div>
           </div>
         </aside>
-
         <main className="flex-grow">
           <div className="card bg-base-100 shadow-xl mb-4">
             <div className="card-body">
@@ -76,8 +106,8 @@ export default function HomePage() {
                 <textarea 
                   className="textarea textarea-bordered w-full" 
                   placeholder="Write something..."
-                  value={newPost}
-                  onChange={(e) => setNewPost(e.target.value)}
+                  value={postData.content}
+                  onChange={(e) => setPostData({ ...postData, content: e.target.value })}
                 ></textarea>
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center gap-2">
@@ -86,12 +116,12 @@ export default function HomePage() {
                       Upload Image
                       <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
                     </label>
-                    {postImage && <span className="text-success">Image uploaded</span>}
+                    {postData.image && <span className="text-success">Image uploaded</span>}
                   </div>
                   <select 
                     className="select select-bordered select-sm"
-                    value={postPrivacy}
-                    onChange={(e) => setPostPrivacy(e.target.value)}
+                    value={postData.privacy}
+                    onChange={(e) => setPostData({ ...postData, privacy: e.target.value })}
                   >
                     <option value="public">Public</option>
                     <option value="almost private">Almost Private</option>
@@ -104,7 +134,6 @@ export default function HomePage() {
               </form>
             </div>
           </div>
-
           <div className="space-y-4">
             {posts.map((post) => (
               <div key={post.id} className="card bg-base-100 shadow-xl">
@@ -132,7 +161,6 @@ export default function HomePage() {
             ))}
           </div>
         </main>
-
         <aside className="w-full md:w-1/4">
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
@@ -152,6 +180,6 @@ export default function HomePage() {
           </div>
         </aside>
       </div>
-      </>
+    </>
   );
 }
