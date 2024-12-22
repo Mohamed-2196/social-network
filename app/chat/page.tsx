@@ -1,7 +1,7 @@
 import React from 'react';
 import Nav from "../components/nav";
-import Chatpic from '../components/chatpic';
 import ChatBox from '../components/ChatBox';
+import Chatpic from '../components/Chatpic';
 
 const page = () => {
   return (
