@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Import useRouter
+import { Loading } from "./components/loading";
 import HomePage from "./components/home";
 
 export default function Home() {
@@ -34,10 +35,7 @@ export default function Home() {
 
   // Show loading state while checking
   if (isAuthenticated === null) {
-    return                <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-    <div className="radial-progress animate-spin h-24 w-24 border-8 border-base-300 border-t-blue-600" style={{ "--value": 70 }}></div>
-    <p className="mt-4 text-lg text-blue-600">Loading...</p>
-  </div>
+    return     <Loading />;
   }
 
   // Prevent rendering the home page until authentication state is determined
