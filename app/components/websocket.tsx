@@ -1,3 +1,4 @@
+"use client"
 import React, { useEffect, useState } from 'react'
 interface WebSocketMessage {
     id: number;
@@ -10,7 +11,7 @@ const Websocket = () => {
 
   useEffect(() => {
     // Connect to WebSocket server
-    const ws = new WebSocket("ws://localhost:8080/group");
+    const ws = new WebSocket("ws://localhost:8080/ws");
 
     ws.onopen = () => {
       console.log("Connected to WebSocket server");
