@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { generateFromEmail, generateUsername } from "unique-username-generator";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -36,38 +35,39 @@ export default function AuthPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true); // Start loading
-
+  
+    // Log the email before nickname generation
+    console.log("Email for nickname generation:", formData.email);
+  
     // Generate a nickname if it's empty
     if (isSignUp && !formData.nickname) {
-      const generatedNickname = generateUsername();
-      setFormData((prevState) => ({
-        ...prevState,
-        nickname: generatedNickname,
-      }));
-    }
-
+      const username = formData.email.split('@')[0];
+      const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      formData.nickname = username + randomNumber;
+  }
+  
     const url = isSignUp ? `${serverUrl}/signup` : `${serverUrl}/signin`;
     const formDataToSend = new FormData();
-
+  
     Object.keys(formData).forEach((key) => {
       if (formData[key] !== null && formData[key] !== '') {
         formDataToSend.append(key, formData[key]);
       }
     });
-
+  
     try {
       const response = await fetch(url, {
         method: 'POST',
         body: formDataToSend,
         credentials: "include",
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Response error:', errorData);
         throw new Error(errorData.message);
       }
-
+  
       const data = await response.json();
       console.log('Success:', data);
       router.push('/');
@@ -78,7 +78,6 @@ export default function AuthPage() {
       setIsLoading(false); // Stop loading
     }
   };
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-indigo-100 to-indigo-300">
       <div className="max-w-md w-full p-8 border-2 border-indigo-600 rounded-xl shadow-lg bg-white mt-10 mb-8">

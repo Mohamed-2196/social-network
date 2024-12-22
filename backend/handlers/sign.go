@@ -40,17 +40,17 @@ var sessions = make(map[string]session)
 
 // CORS middleware
 func enableCORS(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000") // Your frontend URL
-    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-    w.Header().Set("Access-Control-Allow-Credentials", "true") // Important to include cookies
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000") // Frontend origin
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 
-    // Handle preflight requests
-    if r.Method == http.MethodOptions {
-        w.WriteHeader(http.StatusNoContent)
-        return
-    }
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 }
+
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r) // Enable CORS for this endpoint
 
@@ -117,8 +117,8 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    sessionToken,
 		Path:     "/",
 		HttpOnly: true,
-        SameSite: http.SameSiteLaxMode,
-        Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   false,
 	})
 
 	w.WriteHeader(http.StatusOK)
@@ -127,7 +127,6 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r) // Enable CORS for this endpoint
-
 
 	email := r.FormValue("email")
 	password := r.FormValue("password")
@@ -231,7 +230,7 @@ func Validcookie(w http.ResponseWriter, r *http.Request) {
 
 	session := sessions[sessionToken]
 	fmt.Println(session)
-	if session.id>0 {
+	if session.id > 0 {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": "Valid session",

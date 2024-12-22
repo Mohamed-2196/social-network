@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { FaHeart, FaComment, FaEdit, FaLock, FaGlobe, FaUserFriends, FaImages } from 'react-icons/fa';
 
+import React, { useState, useEffect } from 'react';
+import { FaHeart, FaComment, FaLock, FaGlobe, FaUserSecret, FaBirthdayCake } from 'react-icons/fa';
 import Nav from '../components/nav';
 import { Loading } from '../components/loading';
 import { Error } from '../components/error';
@@ -9,13 +9,15 @@ import { Error } from '../components/error';
 export default function ProfilePage() {
   const [userInfo, setUserInfo] = useState({
     image: "",
-    name: '',
+    firstName: '',
+    lastName: '',
     username: '',
     email: '',
     bio: '',
     joinDate: '',
     birthday: '',
     accountType: '',
+    private: false,
     followersCount: 0,
     followingCount: 0,
     postCount: 0,
@@ -24,141 +26,323 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('posts');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    email: '',
+    birthday: '',
+    accountType: '',
+    nickname: '',
+    firstName: '',
+    lastName: '',
+    bio: '',
+    private: false,
+    avatar: null // Add avatar state
+  });
+
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/profile";
   const imageBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/uploads/";
 
   useEffect(() => {
-    fetch(serverUrl, { method: "POST", credentials: 'include' })
-      .then(res => {
-        if (!res.ok) throw new Error('Network response was not ok');
-        return res.json();
-      })
-      .then(data => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(serverUrl, {
+          method: "POST",
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
         setUserInfo({
-          name: `${data.first_name} ${data.last_name}`,
+          firstName: data.first_name,
+          lastName: data.last_name,
           username: `@${data.nickname}`,
           email: data.email,
           bio: data.about,
           joinDate: `Joined ${new Date(data.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
-          birthday: `Birthday: ${new Date(data.birthday).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
+          birthday: new Date(data.birthday).toISOString().split('T')[0],
           accountType: data.account_type,
+          private: data.private,
           image: data.image ? imageBaseUrl + data.image : `${imageBaseUrl}empty.webp`,
           followersCount: data.followers_count,
           followingCount: data.following_count,
           postCount: data.post_count,
         });
-        setIsLoading(false);
-      })
-      .catch(err => {
+        setEditData({
+          email: data.email,
+          birthday: new Date(data.birthday).toISOString().split('T')[0],
+          accountType: data.account_type,
+          nickname: data.nickname,
+          firstName: data.first_name,
+          lastName: data.last_name,
+          bio: data.about,
+          private: data.private,
+        });
+      } catch (err) {
         console.error('Fetch error:', err);
         setError(err);
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+
+    fetchUserData();
   }, []);
 
+  const handleEditToggle = () => {
+    setIsEditing((prev) => !prev);
+  };
+
+  const handleSave = async () => {
+    const formData = new FormData();
+    for (const key in editData) {
+      formData.append(key, editData[key]);
+    }
+
+    try {
+      const response = await fetch(`${serverUrl}/edit`, {
+        method: "POST",
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      setUserInfo(prev => ({
+        ...prev,
+        email: data.email,
+        birthday: `Birthday: ${new Date(data.birthday).toLocaleDateString('en-US')}`,
+        accountType: data.account_type,
+        username: `@${data.nickname}`,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        bio: data.about,
+        private: data.private,
+        image: data.image ? `${imageBaseUrl}${data.image}` : prev.image // Update the image if there's a new one
+      }));
+      setIsEditing(false); // Exit editing mode after saving
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      alert('Failed to update profile. Please try again.'); // Notify user
+    }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditData((prev) => ({ ...prev, avatar: file }));
+    }
+  };
+  
+  const handleChange = (e, field) => {
+    setEditData((prev) => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+  };
+
   if (isLoading) {
-    return (
-    <Loading />
-    );
+    return <Loading />;
   }
 
   if (error) {
-    return (
-     <Error message ="error"/>
-    );
+    return <Error message="error" />;
   }
 
   return (
     <>
       <Nav />
       <br />
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-lg">
-            <div className="md:flex">
-              <div className="md:flex-shrink-0 relative">
-                <div className="h-48 w-full md:w-48 bg-gradient-to-br mt-8 flex items-center justify-center ">
-                  <img
-                    className="h-40 w-40 rounded-full border-2 border-blue-600 shadow-lg object-cover"
-                    src={userInfo.image || 'https://picsum.photos/150/150'}
-                    alt="Profile"
-                  />
-                </div>
-                <div className="absolute bottom-0 right-0 mb-2 mr-2">
-                  <button className="bg-white text-blue-500 rounded-full p-2 shadow-lg hover:bg-blue-100 transition duration-300">
-                    <FaEdit size={20} />
-                  </button>
-                </div>
-              </div>
-              <div className="p-8 flex-grow">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h1 className="text-3xl font-extrabold text-gray-900 mb-1">{userInfo.name}</h1>
-                    <p className="text-lg text-gray-600">{userInfo.username}</p>
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-4">{userInfo.bio}</p>
-                <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
-                  <span>{userInfo.email}</span>
-                  <span>{userInfo.joinDate}</span>
-                  <span>{userInfo.birthday}</span>
-                </div>
-                <div className="flex space-x-8">
-                  <div className="text-center">
-                    <span className="block text-2xl font-bold text-gray-900">{userInfo.followersCount}</span>
-                    <span className="text-gray-600">Followers</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="block text-2xl font-bold text-gray-900">{userInfo.followingCount}</span>
-                    <span className="text-gray-600">Following</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="block text-2xl font-bold text-gray-900">{userInfo.postCount}</span>
-                    <span className="text-gray-600">Posts</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="px-8 py-4 bg-gray-50">
-  <div className="flex mb-4 border-b border-gray-200">
-    <button
-      className={`w-1/2 pb-2 font-semibold ${activeTab === 'posts' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'}`}
-      onClick={() => setActiveTab('posts')}
-    >
-      Posts
-    </button>
-    <button
-      className={`w-1/2 pb-2 font-semibold ${activeTab === 'liked' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'}`}
-      onClick={() => setActiveTab('liked')}
-    >
-      Liked Posts
-    </button>
+      <div className="max-w-5xl mx-auto">
+        <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-lg">
+          <div className="md:flex">
+          <div className="md:flex-shrink-0 relative">
+  <div className="h-48 w-full md:w-48 bg-gradient-to-br mt-8 flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center mt-4">
+      <img
+        className="h-40 w-40 rounded-full border-2 border-blue-600 shadow-lg object-cover"
+        src={userInfo.image || 'https://picsum.photos/150/150'}
+        alt="Profile"
+      />
+      {isEditing && (
+                       <input
+                       type="file"
+                       name="avatar"
+                       className="file-input file-input-bordered file-input-primary w-full" 
+                       accept="image/*"
+                       onChange={handleAvatarChange}
+                     />
+      )}
+    </div>
   </div>
-
-              <div className="grid grid-cols1 md:grid-cols2 gap6">
-                {posts.map((post) => (
-                  <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration300">
-                    {post.image && (
-                      <img src={post.image} alt={`Post ${post.id}`} className="w-full h48 object-cover" />
-                    )}
-                    <div className="p4">
-                      <p className="textgray800 mb2">{post.content}</p>
-                      <div className="flex justify-between textgray500">
-                        <button className="flex itemscenter space-x1 hover:textblue500 transition duration300">
-                          <FaHeart />
-                          <span>{post.likes}</span>
-                        </button>
-                        <button className="flex itemscenter space-x1 hover:textpurple500 transition duration300">
-                          <FaComment />
-                          <span>{post.comments}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+</div>
+            <div className="p-8 flex-grow">
+              <h1 className="text-3xl font-extrabold text-gray-900 mb-1">
+                {isEditing ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editData.firstName}
+                      onChange={(e) => handleChange(e, 'firstName')}
+                      className="border rounded p-1 mr-2"
+                      placeholder="First Name"
+                    />
+                    <input
+                      type="text"
+                      value={editData.lastName}
+                      onChange={(e) => handleChange(e, 'lastName')}
+                      className="border rounded p-1"
+                      placeholder="Last Name"
+                    />
+                  </>
+                ) : (
+                  `${userInfo.firstName} ${userInfo.lastName}`
+                )}
+              </h1>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editData.nickname}
+                  onChange={(e) => handleChange(e, 'nickname')}
+                  className="border rounded p-1 mb-2"
+                  placeholder="Nickname"
+                />
+              ) : (
+                <p className="text-lg text-gray-600">{userInfo.username}</p>
+              )}
+              <span className="flex items-center">
+                <FaUserSecret className="mr-1" />
+                {isEditing ? (
+                  <select
+                    value={editData.private ? 'true' : 'false'}
+                    onChange={(e) => handleChange(e, 'private')}
+                    className="border rounded p-1"
+                  >
+                    <option value="true">Private</option>
+                    <option value="false">Public</option>
+                  </select>
+                ) : (
+                  (userInfo.private ? 'Private' : 'Public')
+                )}
+              </span>
+              {isEditing ? (
+                <textarea
+                  value={editData.bio}
+                  onChange={(e) => handleChange(e, 'bio')}
+                  className="border rounded p-1 mb-4 w-full"
+                  placeholder="Bio"
+                />
+              ) : (
+                <p className="text-gray-700 mb-4">{userInfo.bio}</p>
+              )}
+              <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+                <span>
+                  <FaGlobe className="inline mr-1" />
+                  {isEditing ? (
+                    <input
+                      type="email"
+                      value={editData.email}
+                      onChange={(e) => handleChange(e, 'email')}
+                      className="border rounded p-1"
+                    />
+                  ) : (
+                    <span>{userInfo.email}</span>
+                  )}
+                </span>
+                <span>
+                  <FaLock className="inline mr-1" />
+                  <span>{userInfo.joinDate}</span>
+                </span>
+                <span>
+                  <FaBirthdayCake className="inline mr-1" />
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      value={editData.birthday}
+                      onChange={(e) => handleChange(e, 'birthday')}
+                      className="border rounded p-1"
+                    />
+                  ) : (
+                    <span>{userInfo.birthday}</span>
+                  )}
+                </span>
+              </div>
+              {isEditing ? (
+                <button
+                  onClick={handleSave}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+                >
+                  Save Changes
+                </button>
+              ) : (
+                <button
+                  onClick={handleEditToggle}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+                >
+                  Edit Profile
+                </button>
+              )}
+              <div className="flex space-x-8 mt-4">
+                <div className="text-center">
+                  <span className="block text-2xl font-bold text-gray-900">{userInfo.followersCount}</span>
+                  <span className="text-gray-600">Followers</span>
+                </div>
+                <div className="text-center">
+                  <span className="block text-2xl font-bold text-gray-900">{userInfo.followingCount}</span>
+                  <span className="text-gray-600">Following</span>
+                </div>
+                <div className="text-center">
+                  <span className="block text-2xl font-bold text-gray-900">{userInfo.postCount}</span>
+                  <span className="text-gray-600">Posts</span>
+                </div>
               </div>
             </div>
           </div>
+          <div className="px-8 py-4 bg-gray-50">
+            <div className="flex mb-4 border-b border-gray-200">
+              <button
+                className={`w-1/2 pb-2 font-semibold ${activeTab === 'posts' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'}`}
+                onClick={() => setActiveTab('posts')}
+              >
+                Posts
+              </button>
+              <button
+                className={`w-1/2 pb-2 font-semibold ${activeTab === 'liked' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'}`}
+                onClick={() => setActiveTab('liked')}
+              >
+                Liked Posts
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {posts.map((post) => (
+                <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                  {post.image && (
+                    <img src={post.image} alt={`Post ${post.id}`} className="w-full h-48 object-cover" />
+                  )}
+                  <div className="p-4">
+                    <p className="text-gray-800 mb-2">{post.content}</p>
+                    <div className="flex justify-between text-gray-500">
+                      <button className="flex items-center space-x-1 hover:text-blue-500 transition duration-300">
+                        <FaHeart />
+                        <span>{post.likes}</span>
+                      </button>
+                      <button className="flex items-center space-x-1 hover:text-purple-500 transition duration-300">
+                        <FaComment />
+                        <span>{post.comments}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+      </div>
     </>
   );
 }

@@ -1,66 +1,57 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
-
-	"github.com/gorilla/websocket"
+	"time"
 )
 
-var (
-	clients = make(map[string][]*websocket.Conn)
-	mu      sync.Mutex
-)
+type Group struct {
+	GroupName  string   `json:"groupTitle"`
+	GroupDesc  string   `json:"groupDescription"`
+	Users      []string `json:"users"`
+	Visibility string   `json:"visibility"`
+}
 
 func HandleGroupChat(w http.ResponseWriter, r *http.Request) {
-	var upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
+	enableCORS(w, r)
 
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		fmt.Println("Error upgrading connection:", err)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-	defer conn.Close()
 
-	// TEMP USERNAME BEFORE COOKIES GET IMPLEMENTED
-	name1 := "Yousif"
-	name2 := "Mohammed"
+	var group Group
+	var privacy bool
 
-	mu.Lock()
-	if clients[name1] == nil {
-		clients[name1] = []*websocket.Conn{}
+	err := json.NewDecoder(r.Body).Decode(&group)
+	if err != nil {
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		fmt.Println("Error decoding JSON:", err)
+		return
 	}
-	clients[name1] = append(clients[name1], conn)
-	mu.Unlock()
 
-	mu.Lock()
-	if clients[name2] == nil {
-		clients[name2] = []*websocket.Conn{}
+	fmt.Println("Group Title:", group.GroupName)
+	fmt.Println("Group Description:", group.GroupDesc)
+	fmt.Println("Users:", group.Users)
+	fmt.Println("Privacy:", group.Visibility)
+
+	if group.Visibility == "public" {
+		privacy = false
+	} else {
+		privacy = true
 	}
-	clients[name2] = append(clients[name2], conn)
-	mu.Unlock()
 
-	defer func() {
-		mu.Lock()
-		delete(clients, name1)
-		mu.Unlock()
-	}()
+	_, err = DB.Exec("INSERT INTO groups (name, description, created_at, type) VALUES (?, ?, ?, ?)",
+		group.GroupName, group.GroupDesc, time.Now(), privacy)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(err)
 
-	defer func() {
-		mu.Lock()
-		delete(clients, name2)
-		mu.Unlock()
-	}()
-
-	fmt.Println(clients)
-
-	//Stimluate Reading
-	for {
-
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Group created successfully"})
 }

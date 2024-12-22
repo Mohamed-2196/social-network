@@ -102,3 +102,86 @@ WHERE u.user_id = ?`
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
+
+
+
+func EditProfileHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w, r)
+	err := r.ParseMultipartForm(10 << 20) // 10 MB max
+	if err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		fmt.Println(err)
+		return
+	}
+
+	// Get user_id from cookie
+	c, err := r.Cookie("session_token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			http.Error(w, "No active session", http.StatusUnauthorized)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	sessionToken := c.Value
+	fmt.Println("this is session of request", sessionToken)
+	fmt.Println("this is sessions", sessions)
+
+	session := sessions[sessionToken]
+	userID := session.id
+
+	// Extract form data
+	email := r.FormValue("email")
+	birthday := r.FormValue("birthday")
+	nickname := r.FormValue("nickname")
+	firstName := r.FormValue("firstName")
+	lastName := r.FormValue("lastName")
+	bio := r.FormValue("bio")
+	private := r.FormValue("private") == "true"
+
+	// Handle file upload if present
+	var avatarFilename string
+	file, handler, err := r.FormFile("avatar")
+	if err == nil {
+		defer file.Close()
+		avatarFilename, err = saveFile(file, handler)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			fmt.Println(err)
+			return
+		}
+	}
+
+	// Update user in database
+	_, err = DB.Exec(`
+        UPDATE users 
+        SET email = ?, birthday = ?, nickname = ?, 
+            first_name = ?, last_name = ?, about = ?, private = ?, 
+            image = COALESCE(NULLIF(?, ''), image)
+        WHERE user_id = ?
+    `, email, birthday, nickname, firstName, lastName, bio, private, avatarFilename, userID)
+
+	if err != nil {
+		http.Error(w, "Unable to update user", http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
+
+	// Prepare response
+	response := map[string]interface{}{
+		"email":        email,
+		"birthday":     birthday,
+		"nickname":     nickname,
+		"first_name":   firstName,
+		"last_name":    lastName,
+		"about":        bio,
+		"private":      private,
+		"image":        avatarFilename,
+	}
+
+	// Send JSON response
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
