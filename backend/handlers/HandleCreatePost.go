@@ -8,7 +8,7 @@ import (
 )
 
 type PostRequest struct {
-	Privacy   string `json:"privacy"`
+	Privacy string `json:"privacy"`
 	Content string `json:"content"`
 	Image   string `json:"image"`
 }
@@ -18,23 +18,16 @@ type PostResponse struct {
 	Message string `json:"message"`
 }
 
-// func (req *PostRequest) Validate() error {
-// 	if req.Title == "" || req.Content == "" {
-// 		return fmt.Errorf("title and content are required")
-// 	}
-// 	return nil
-// }
+func (req *PostRequest) Validate() error {
+	if (req.Content == "" && req.Image == "") {
+		return fmt.Errorf("title and content are required")
+	}
+	return nil
+}
 
 func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
-	fmt.Println("Very nice")
 	w.Header().Set("Content-Type", "application/json")
-	if r.Method != http.MethodPost {
-		sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	fmt.Println("Very nice1")
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
 		fmt.Println("No session cookie found:", err)
@@ -44,15 +37,9 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	session := sessions[cookie.Value]
 	id := session.id
-
-	if err := r.ParseForm(); err != nil {
-		sendErrorResponse(w, "Error parsing form data", http.StatusBadRequest)
-		return
-	}
-
 	var req PostRequest
 	req.Content = r.FormValue("content")
-req.Privacy = r.FormValue("privacy")
+	req.Privacy = r.FormValue("privacy")
 	var imagefilename string
 	file, handler, err := r.FormFile("image")
 	if err == nil {
@@ -64,17 +51,16 @@ req.Privacy = r.FormValue("privacy")
 			return
 		}
 	}
-	// if err := req.Validate(); err != nil {
-	// 	sendErrorResponse(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
+	if err := req.Validate(); err != nil {
+		sendErrorResponse(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	postID, err := SavePost(DB, id, req.Privacy, req.Content, imagefilename)
 	if err != nil {
 		fmt.Printf("Error saving post: %v\n", err)
 		sendErrorResponse(w, "Failed to save post", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("Very nice6")
 	response := PostResponse{
 		Status:  "success",
 		Message: fmt.Sprintf("Post created successfully with ID %d", postID),
@@ -85,7 +71,6 @@ req.Privacy = r.FormValue("privacy")
 		sendErrorResponse(w, "Error encoding response", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("Very nice7")
 }
 
 func SavePost(db *sql.DB, userID int, privacy, contentText, contentImage string) (int, error) {
@@ -94,7 +79,7 @@ func SavePost(db *sql.DB, userID int, privacy, contentText, contentImage string)
     INSERT INTO posts (user_id, content_text, content_image, privacy, created_at) 
     VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
 `
-	result, err := db.Exec(query, userID, contentText,privacy, contentImage)
+	result, err := db.Exec(query, userID, contentText, contentImage,privacy, )
 	if err != nil {
 		fmt.Println("Error saving into the database:", err)
 		return 0, err

@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
-import Websocket from "../components/websocket";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);

@@ -16,13 +16,9 @@ export default function HomePage() {
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files[0]; // Get the first file
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPostData({ ...postData, image: reader.result });
-      };
-      reader.readAsDataURL(file);
+      setPostData({ ...postData, image: file }); // Store the file object
     }
   };
 
@@ -30,7 +26,7 @@ export default function HomePage() {
     e.preventDefault();
 
     if (!postData.content.trim() && !postData.image) {
-      return;
+      return; // Prevent submission if both are empty
     }
 
     try {
@@ -38,9 +34,8 @@ export default function HomePage() {
       formDataToSend.append('content', postData.content);
       formDataToSend.append('privacy', postData.privacy);
       if (postData.image) {
-        formDataToSend.append('image', postData.image);
+        formDataToSend.append('image', postData.image); // Append the file
       }
-
       const response = await fetch(`${serverUrl}/createpost`, {
         method: 'POST',
         body: formDataToSend,
@@ -62,11 +57,11 @@ export default function HomePage() {
         content: postData.content,
         privacy: postData.privacy,
         avatar: '/avatars/current-user.jpg',
-        image: postData.image,
+        image: URL.createObjectURL(postData.image), // Create a URL for preview
       };
 
       setPosts([newPost, ...posts]);
-      setPostData({ content: '', privacy: 'public', image: null });
+      setPostData({ content: '', privacy: 'public', image: null }); // Reset form data
     } catch (error) {
       console.error('Error submitting post:', error);
     }
