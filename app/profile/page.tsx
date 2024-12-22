@@ -1,7 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { FaHeart, FaComment, FaEdit, FaLock, FaGlobe, FaUserFriends, FaImages } from 'react-icons/fa';
+
 import Nav from '../components/nav';
+import { Loading } from '../components/loading';
+import { Error } from '../components/error';
 
 export default function ProfilePage() {
   const [userInfo, setUserInfo] = useState({
@@ -55,22 +58,13 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-400 to-blue-600">
-        <div className="p-8 bg-white bg-opacity-20 rounded-full backdrop-blur-lg">
-          <div className="w-16 h-16 border-4 border-white border-dashed rounded-full animate-spin"></div>
-        </div>
-      </div>
+    <Loading />
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-400 to-pink-500">
-        <div className="p-8 bg-white rounded-lg shadow-xl">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Oops! Something went wrong</h2>
-          <p className="text-gray-700">{error.message}</p>
-        </div>
-      </div>
+     <Error message ="error"/>
     );
   }
 
