@@ -12,8 +12,6 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/profile", UserDataHandler).Methods("POST")       // Specify GET method
 	r.HandleFunc("/profile/edit", EditProfileHandler).Methods("POST")       // Specify GET method
 	r.HandleFunc("/", CreatePostHandler).Methods("POST")
-	r.HandleFunc("/ws", Ws).Methods("POST")
+	r.HandleFunc("/ws", Ws).Methods("GET")
 
-
-	
 }

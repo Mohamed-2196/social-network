@@ -14,6 +14,7 @@ var (
 )
 
 func Ws(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w,r)
 	var upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true

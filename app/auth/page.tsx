@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Websocket from "../components/websocket";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -71,6 +72,11 @@ export default function AuthPage() {
       const data = await response.json();
       console.log('Success:', data);
       router.push('/');
+      const ws = new WebSocket("ws://localhost:8080/ws");
+
+      ws.onopen = () => {
+        console.log("Connected to WebSocket server");
+      };
     } catch (error) {
       console.error('Network Error:', error);
       setErrorMessage(error.message);
