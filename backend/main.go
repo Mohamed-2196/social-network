@@ -29,7 +29,8 @@ func main() {
 	r := mux.NewRouter()
 	handlers.AddHandlers(r)
 	//handlers.AddHandlers(mux, db)
-
+	fs := http.FileServer(http.Dir("./uploads"))
+	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", fs))
 	// Start the HTTP server
 	err = http.ListenAndServe(":8080", r)
 	if err != nil {

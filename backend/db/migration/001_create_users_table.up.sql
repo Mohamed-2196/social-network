@@ -9,5 +9,8 @@ CREATE TABLE IF NOT EXISTS "users" (
     "image" VARCHAR(255),
     "about" TEXT,
     "password" VARCHAR(255) NOT NULL,
-    "private" BOOLEAN NOT NULL DEFAULT FALSE  -- Added private field
+    "private" BOOLEAN NOT NULL DEFAULT FALSE,  -- Added private field
+    "followers_count" INTEGER DEFAULT 0,      -- Added comma here
+    "following_count" INTEGER DEFAULT 0,      -- Added comma here
+    "post_count" INTEGER DEFAULT 0             -- Added comma here (optional, but good practice)
 );
