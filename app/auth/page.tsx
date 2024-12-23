@@ -2,10 +2,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
+import { useGlobalContext } from "../components/GlobalContext";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const { socket, setSocket } = useGlobalContext();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -55,7 +57,9 @@ export default function AuthPage() {
 
     if (isSignUp && !formData.nickname) {
       const username = formData.email.split("@")[0];
-      const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
+      const randomNumber = Math.floor(Math.random() * 1000)
+        .toString()
+        .padStart(3, "0");
       formData.nickname = username + randomNumber;
     }
 
@@ -68,29 +72,32 @@ export default function AuthPage() {
       }
     });
 
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        body: formDataToSend,
-        credentials: "include",
-      });
+    if (!socket) {
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          body: formDataToSend,
+          credentials: "include",
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message);
+        }
+
+        const data = await response.json();
+        router.push("/");
+        const ws = new WebSocket("ws://localhost:8080/ws");
+        setSocket(ws);
+
+        ws.onopen = () => {
+          console.log("Connected to WebSocket server");
+        };
+      } catch (error) {
+        setErrorMessage(error.message);
+      } finally {
+        setIsLoading(false);
       }
-
-      const data = await response.json();
-      router.push("/");
-      const ws = new WebSocket("ws://localhost:8080/ws");
-
-      ws.onopen = () => {
-        console.log("Connected to WebSocket server");
-      };
-    } catch (error) {
-      setErrorMessage(error.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -99,7 +106,9 @@ export default function AuthPage() {
       <div
         ref={formRef}
         className={`max-w-md w-full p-8 border-2 rounded-xl shadow-lg ${
-          isDarkMode ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-white"
+          isDarkMode
+            ? "border-gray-700 bg-gray-800"
+            : "border-gray-300 bg-white"
         } mt-10 mb-8`}
       >
         <div className="flex justify-between items-center mb-6">
@@ -157,8 +166,14 @@ export default function AuthPage() {
             </label>
           </div>
         </div>
-        {errorMessage && <div className="text-red-500 text-center mb-4">{errorMessage}</div>}
-        <form className="space-y-4" onSubmit={handleSubmit} encType="multipart/form-data">
+        {errorMessage && (
+          <div className="text-red-500 text-center mb-4">{errorMessage}</div>
+        )}
+        <form
+          className="space-y-4"
+          onSubmit={handleSubmit}
+          encType="multipart/form-data"
+        >
           {isSignUp && (
             <>
               <input
@@ -219,7 +234,9 @@ export default function AuthPage() {
                 onChange={handleInputChange}
               ></textarea>
               <label className="block">
-                <span className="block text-sm font-medium mb-1">Upload Avatar (Optional)</span>
+                <span className="block text-sm font-medium mb-1">
+                  Upload Avatar (Optional)
+                </span>
                 <input
                   type="file"
                   name="avatar"
@@ -233,7 +250,9 @@ export default function AuthPage() {
           <button
             type="submit"
             className={`w-full mt-4 p-3 rounded-md text-white ${
-              isLoading ? "bg-gray-500 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"
+              isLoading
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-700"
             } transition duration-200`}
             disabled={isLoading}
           >
@@ -242,7 +261,10 @@ export default function AuthPage() {
         </form>
         <p className="text-center mt-4">
           {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-          <button className="text-indigo-500 font-semibold" onClick={toggleAuthMode}>
+          <button
+            className="text-indigo-500 font-semibold"
+            onClick={toggleAuthMode}
+          >
             {isSignUp ? "Sign In" : "Sign Up"}
           </button>
         </p>

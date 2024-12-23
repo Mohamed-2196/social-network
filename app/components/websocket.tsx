@@ -1,13 +1,15 @@
-"use client"
-import React, { useEffect, useState } from 'react'
+"use client";
+import React, { useEffect, useState } from "react";
+import { useGlobalContext } from "./GlobalContext";
 interface WebSocketMessage {
-    id: number;
-    text: string;
-  }
+  id: number;
+  text: string;
+}
 const Websocket = () => {
- const [messages, setMessages] = useState<WebSocketMessage[]>([]);
+  const [messages, setMessages] = useState<WebSocketMessage[]>([]);
   const [input, setInput] = useState<string>("");
-  const [socket, setSocket] = useState<WebSocket | null>(null);
+  // const [socket, setSocket] = useState<WebSocket | null>(null);
+  const { socket, setSocket } = useGlobalContext();
 
   useEffect(() => {
     // Connect to WebSocket server
@@ -52,11 +54,7 @@ const Websocket = () => {
       console.error("WebSocket is not open");
     }
   };
-  return (
-    <div>
-      
-    </div>
-  )
-}
+  return <div></div>;
+};
 
-export default Websocket
+export default Websocket;

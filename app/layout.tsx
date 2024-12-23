@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { GlobalProvider } from "./components/GlobalContext"; // Import the GlobalProvider
 import Websocket from "./components/websocket";
 import { Init } from "./components/init";
 
@@ -25,14 +26,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-
     <html lang="en" data-theme="winter">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Init />
-        {/* <Websocket /> */}
+        <GlobalProvider>
+          {children}
+          <Init />
+          {/* <Websocket /> */}
+        </GlobalProvider>
       </body>
     </html>
   );
