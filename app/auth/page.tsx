@@ -2,12 +2,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
-import { useGlobalContext } from "../components/GlobalContext";
+// import { useGlobalContext } from "../components/GlobalContext";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const { socket, setSocket } = useGlobalContext();
+  // const { socket, setSocket } = useGlobalContext();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -22,10 +22,30 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+  const serverUrl2 = `${process.env.NEXT_PUBLIC_SERVER_URL}/cook`;
   const router = useRouter();
 
   const formRef = useRef(null);
   const headingRef = useRef(null);
+  useEffect(() => {
+    const validateCookie = async () => {
+      try {
+        const response = await fetch(serverUrl2, {
+          method: "POST",
+          credentials: "include",
+        });
+        if (response.ok) {
+          router.push("/");
+          console.log("WHY");
+        }
+      } catch (error) {
+        console.error("Error fetching cookie validation:", error);
+        router.push("/auth");
+      }
+    };
+
+    validateCookie();
+  }, []);
 
   useEffect(() => {
     gsap.fromTo(
@@ -51,58 +71,57 @@ export default function AuthPage() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (isSignUp && !formData.nickname) {
-      const username = formData.email.split("@")[0];
-      const randomNumber = Math.floor(Math.random() * 1000)
-        .toString()
-        .padStart(3, "0");
-      formData.nickname = username + randomNumber;
-    }
+    try {
+      const url = isSignUp ? `${serverUrl}/signup` : `${serverUrl}/signin`;
+      const formDataToSend = new FormData();
 
-    const url = isSignUp ? `${serverUrl}/signup` : `${serverUrl}/signin`;
-    const formDataToSend = new FormData();
-
-    Object.keys(formData).forEach((key) => {
-      if (formData[key] !== null && formData[key] !== "") {
-        formDataToSend.append(key, formData[key]);
-      }
-    });
-
-    if (!socket) {
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          body: formDataToSend,
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message);
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== null && formData[key] !== "") {
+          formDataToSend.append(key, formData[key]);
         }
+      });
 
-        const data = await response.json();
-        router.push("/");
-        const ws = new WebSocket("ws://localhost:8080/ws");
-        setSocket(ws);
+      const response = await fetch(url, {
+        method: "POST",
+        body: formDataToSend,
+        credentials: "include",
+      });
 
-        ws.onopen = () => {
-          console.log("Connected to WebSocket server");
-        };
-      } catch (error) {
-        setErrorMessage(error.message);
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
       }
+
+      const data = await response.json();
+      router.push("/");
+
+      // if (!socket) {
+      //   const ws = new WebSocket("ws://localhost:8080/ws");
+      //   setSocket(ws);
+
+      //   ws.onopen = () => {
+      //     console.log("Connected to WebSocket server auth");
+      //   };
+      // } else {
+      //   console.log("WebSocket already initialized.");
+      // }
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className={`${isDarkMode ? "bg-gray-900 text-gray-400" : "bg-gray-100 text-gray-900"} flex items-center justify-center min-h-screen`}>
+    <div
+      className={`${
+        isDarkMode ? "bg-gray-900 text-gray-400" : "bg-gray-100 text-gray-900"
+      } flex items-center justify-center min-h-screen`}
+    >
       <div
         ref={formRef}
         className={`max-w-md w-full p-8 border-2 rounded-xl shadow-lg ${

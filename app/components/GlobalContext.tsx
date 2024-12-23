@@ -1,20 +1,45 @@
-'use client'
-import React, { createContext, useContext, ReactNode, useState } from "react";
+"use client";
 
-// Define the shape of the global variable
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
+
 interface GlobalContextType {
-  socket: WebSocket | null; // Allow null
-  setSocket: (value: WebSocket | null) => void; // Allow setting null
+  socket: WebSocket | null;
+  setSocket: (value: WebSocket | null) => void;
 }
 
-// Create the context
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
-// Create a provider component
 export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [socket, setSocket] = useState<WebSocket | null>(null); // State allows null
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:8080/ws");
+    setSocket(ws);
+
+    ws.onopen = () => {
+      console.log("Connected to WebSocket server from global context");
+    };
+
+    ws.onerror = (error: Event) => {
+      console.error("WebSocket error:", error);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
 
   return (
     <GlobalContext.Provider value={{ socket, setSocket }}>
@@ -23,7 +48,6 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-// Custom hook to use the context
 export const useGlobalContext = () => {
   const context = useContext(GlobalContext);
   if (!context) {

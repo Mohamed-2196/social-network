@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useGlobalContext } from "./GlobalContext";
 
 interface WebSocketMessage {
   id: number;
@@ -10,42 +11,39 @@ interface WebSocketMessage {
 const WebSocketComponent: React.FC = () => {
   const [messages, setMessages] = useState<WebSocketMessage[]>([]);
   const [input, setInput] = useState<string>("");
-  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const { socket } = useGlobalContext();
 
   useEffect(() => {
-    // Connect to WebSocket server
-    const ws = new WebSocket("ws://localhost:8080/group");
+    if (socket) {
+      socket.onopen = () => {
+        console.log("Connected to WebSocket server temp");
+      };
 
-    ws.onopen = () => {
-      console.log("Connected to WebSocket server");
-    };
+      socket.onmessage = (event: MessageEvent) => {
+        console.log("Message received:", event.data);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { id: prevMessages.length + 1, text: event.data },
+        ]);
+      };
 
-    ws.onmessage = (event: MessageEvent) => {
-      console.log("Message received:", event.data);
+      socket.onerror = (error: Event) => {
+        console.error("WebSocket error:", error);
+      };
 
-      // Parse incoming messages as strings
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { id: prevMessages.length + 1, text: event.data },
-      ]);
-    };
+      socket.onclose = () => {
+        console.log("WebSocket connection closed");
+      };
+    }
 
-    ws.onerror = (error: Event) => {
-      console.error("WebSocket error:", error);
-    };
-
-    ws.onclose = () => {
-      console.log("WebSocket connection closed");
-    };
-
-    // Store the WebSocket instance
-    setSocket(ws);
-
-    // Cleanup when the component unmounts
     return () => {
-      ws.close();
+      if (socket) {
+        socket.onmessage = null;
+        socket.onerror = null;
+        socket.onclose = null;
+      }
     };
-  }, []);
+  }, [socket]);
 
   const sendMessage = () => {
     if (socket && socket.readyState === WebSocket.OPEN) {

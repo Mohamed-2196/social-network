@@ -11,40 +11,40 @@ const Websocket = () => {
   // const [socket, setSocket] = useState<WebSocket | null>(null);
   const { socket, setSocket } = useGlobalContext();
 
-  useEffect(() => {
-    // Connect to WebSocket server
-    const ws = new WebSocket("ws://localhost:8080/ws");
+  // useEffect(() => {
+  //   const ws = new WebSocket("ws://localhost:8080/ws");
+  //   if (socket == null) {
+  //     // Connect to WebSocket server
+  //     setSocket(ws);
 
-    ws.onopen = () => {
-      console.log("Connected to WebSocket server");
-    };
+  //     ws.onopen = () => {
+  //       console.log("Connected to WebSocket server init");
+  //     };
 
-    ws.onmessage = (event: MessageEvent) => {
-      console.log("Message received:", event.data);
+  //     ws.onmessage = (event: MessageEvent) => {
+  //       console.log("Message received:", event.data);
 
-      // Parse incoming messages as strings
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { id: prevMessages.length + 1, text: event.data },
-      ]);
-    };
+  //       // Parse incoming messages as strings
+  //       setMessages((prevMessages) => [
+  //         ...prevMessages,
+  //         { id: prevMessages.length + 1, text: event.data },
+  //       ]);
+  //     };
 
-    ws.onerror = (error: Event) => {
-      console.error("WebSocket error:", error);
-    };
+  //     ws.onerror = (error: Event) => {
+  //       console.error("WebSocket error:", error);
+  //     };
 
-    ws.onclose = () => {
-      console.log("WebSocket connection closed");
-    };
+  //     ws.onclose = () => {
+  //       console.log("WebSocket connection closed");
+  //     };
 
-    // Store the WebSocket instance
-    setSocket(ws);
-
-    // Cleanup when the component unmounts
-    return () => {
-      ws.close();
-    };
-  }, []);
+  //     // Cleanup when the component unmounts
+  //   }
+  //   return () => {
+  //     ws.close();
+  //   };
+  // }, []);
 
   const sendMessage = () => {
     if (socket && socket.readyState === WebSocket.OPEN) {

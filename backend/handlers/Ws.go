@@ -15,6 +15,7 @@ var (
 
 func Ws(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w,r)
+	fmt.Println("ENTER")
 	var upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true
@@ -56,7 +57,7 @@ func Ws(w http.ResponseWriter, r *http.Request) {
 		mu.Unlock()
 	}()
 
-	fmt.Println(clients)
+	// fmt.Println(clients)
 
 	//Stimluate Reading
 	for {
