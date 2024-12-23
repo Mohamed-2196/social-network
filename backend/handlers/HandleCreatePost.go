@@ -18,12 +18,19 @@ type PostResponse struct {
 	Message string `json:"message"`
 }
 
-func (req *PostRequest) Validate() error {
-	if (req.Content == "" && req.Image == "") {
-		return fmt.Errorf("title and content are required")
-	}
-	return nil
+type Post struct {
+	ID      int    `json:"id"`
+	Content string `json:"content"`
+	Image   string `json:"image"`
+	Privacy string `json:"privacy"`
 }
+
+type PostsResponse struct {
+	Status string `json:"status"`
+	Data   []Post `json:"data,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
+
 
 func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
@@ -37,6 +44,11 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	session := sessions[cookie.Value]
 	id := session.id
+	if id == 0 {
+        sendErrorResponse(w, "Invalid session", http.StatusUnauthorized)
+		http.Redirect(w,r,"/auth",http.StatusNonAuthoritativeInfo)
+        return
+    }
 	var req PostRequest
 	req.Content = r.FormValue("content")
 	req.Privacy = r.FormValue("privacy")
@@ -51,10 +63,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := req.Validate(); err != nil {
-		sendErrorResponse(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+
 	postID, err := SavePost(DB, id, req.Privacy, req.Content, imagefilename)
 	if err != nil {
 		fmt.Printf("Error saving post: %v\n", err)
@@ -100,3 +109,66 @@ func sendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 	}
 	_ = json.NewEncoder(w).Encode(response)
 }
+
+func CreatedPostsHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+		fmt.Println("No session cookie found:", err)
+		sendErrorResponse(w, "Session not found", http.StatusUnauthorized)
+		return
+	}
+
+	session := sessions[cookie.Value]
+	userID := session.id
+
+	posts, err := GetPosts(DB, userID)
+	if err != nil {
+		fmt.Printf("Error fetching posts: %v\n", err)
+		sendErrorResponse(w, "Failed to fetch posts", http.StatusInternalServerError)
+		return
+	}
+
+	response := PostsResponse{
+		Status: "success",
+		Data:   posts,
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		fmt.Printf("Error encoding response: %v\n", err)
+		sendErrorResponse(w, "Error encoding response", http.StatusInternalServerError)
+		return
+	}
+}
+
+func GetPosts(db *sql.DB, userID int) ([]Post, error) {
+	query := `
+    SELECT post_id, content_text, content_image, privacy 
+    FROM posts 
+    WHERE user_id = ? 
+    ORDER BY created_at DESC
+`
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+		var post Post
+		if err := rows.Scan(&post.ID, &post.Content, &post.Image, &post.Privacy); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+}
+

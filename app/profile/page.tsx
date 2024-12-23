@@ -1,10 +1,12 @@
+// ProfilePage.js
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { FaHeart, FaComment, FaLock, FaGlobe, FaUserSecret, FaBirthdayCake } from 'react-icons/fa';
+import { FaLock, FaGlobe, FaUserSecret, FaBirthdayCake } from 'react-icons/fa';
 import Nav from '../components/nav';
 import { Loading } from '../components/loading';
 import { Error } from '../components/error';
+import Post from '../components/posts'; // Import the Post component
 
 export default function ProfilePage() {
   const [userInfo, setUserInfo] = useState({
@@ -40,6 +42,7 @@ export default function ProfilePage() {
   });
 
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/profile";
+  const postsUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/createdposts"; // New endpoint for fetching posts
   const imageBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/uploads/";
 
   useEffect(() => {
@@ -88,7 +91,27 @@ export default function ProfilePage() {
       }
     };
 
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch(postsUrl, {
+          method: "POST",
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch posts');
+        }
+
+        const data = await response.json();
+        setPosts(data.data); // Assuming the response structure contains the posts in `data`
+      } catch (err) {
+        console.error('Fetch posts error:', err);
+        setError(err);
+      }
+    };
+
     fetchUserData();
+    fetchPosts(); // Fetch posts on component mount
   }, []);
 
   const handleEditToggle = () => {
@@ -138,7 +161,7 @@ export default function ProfilePage() {
       setEditData((prev) => ({ ...prev, avatar: file }));
     }
   };
-  
+
   const handleChange = (e, field) => {
     setEditData((prev) => ({
       ...prev,
@@ -151,7 +174,7 @@ export default function ProfilePage() {
   }
 
   if (error) {
-    return <Error message="error" />;
+    return <Error message="An error occurred while fetching data." />;
   }
 
   return (
@@ -161,26 +184,26 @@ export default function ProfilePage() {
       <div className="max-w-5xl mx-auto">
         <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-lg">
           <div className="md:flex">
-          <div className="md:flex-shrink-0 relative">
-  <div className="h-48 w-full md:w-48 bg-gradient-to-br mt-8 flex flex-col items-center justify-center">
-    <div className="flex flex-col items-center mt-4">
-      <img
-        className="h-40 w-40 rounded-full border-2 border-blue-600 shadow-lg object-cover"
-        src={userInfo.image || 'https://picsum.photos/150/150'}
-        alt="Profile"
-      />
-      {isEditing && (
-                       <input
-                       type="file"
-                       name="avatar"
-                       className="file-input file-input-bordered file-input-primary w-full" 
-                       accept="image/*"
-                       onChange={handleAvatarChange}
-                     />
-      )}
-    </div>
-  </div>
-</div>
+            <div className="md:flex-shrink-0 relative">
+              <div className="h-48 w-full md:w-48 bg-gradient-to-br mt-8 flex flex-col items-center justify-center">
+                <div className="flex flex-col items-center mt-4">
+                  <img
+                    className="h-40 w-40 rounded-full border-2 border-blue-600 shadow-lg object-cover"
+                    src={userInfo.image || 'https://picsum.photos/150/150'}
+                    alt="Profile"
+                  />
+                  {isEditing && (
+                    <input
+                      type="file"
+                      name="avatar"
+                      className="file-input file-input-bordered file-input-primary w-full" 
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
             <div className="p-8 flex-grow">
               <h1 className="text-3xl font-extrabold text-gray-900 mb-1">
                 {isEditing ? (
@@ -319,25 +342,15 @@ export default function ProfilePage() {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {posts.map((post) => (
-                <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
-                  {post.image && (
-                    <img src={post.image} alt={`Post ${post.id}`} className="w-full h-48 object-cover" />
-                  )}
-                  <div className="p-4">
-                    <p className="text-gray-800 mb-2">{post.content}</p>
-                    <div className="flex justify-between text-gray-500">
-                      <button className="flex items-center space-x-1 hover:text-blue-500 transition duration-300">
-                        <FaHeart />
-                        <span>{post.likes}</span>
-                      </button>
-                      <button className="flex items-center space-x-1 hover:text-purple-500 transition duration-300">
-                        <FaComment />
-                        <span>{post.comments}</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              {activeTab === 'posts' && posts.map((post) => (
+                <Post
+                  key={post.id}
+                  id={post.id}
+                  image={imageBaseUrl + post.image}
+                  content={post.content}
+                  likes={post.likes}
+                  comments={post.comments}
+                />  
               ))}
             </div>
           </div>
