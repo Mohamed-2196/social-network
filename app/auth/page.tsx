@@ -95,7 +95,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className={`${isDarkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"} flex items-center justify-center min-h-screen`}>
+    <div className={`${isDarkMode ? "bg-gray-900 text-gray-400" : "bg-gray-100 text-gray-900"} flex items-center justify-center min-h-screen`}>
       <div
         ref={formRef}
         className={`max-w-md w-full p-8 border-2 rounded-xl shadow-lg ${
