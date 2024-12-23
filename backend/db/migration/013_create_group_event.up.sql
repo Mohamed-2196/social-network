@@ -25,5 +25,5 @@ CREATE TABLE IF NOT EXISTS "option_vote" (
     FOREIGN KEY ("option_id") REFERENCES "event_option"("option_id")
 );
 
-CREATE UNIQUE INDEX unique_vote ON option_vote (option_id, created_by);
+CREATE UNIQUE INDEX IF NOT EXISTS unique_vote ON option_vote (option_id, created_by);
 
