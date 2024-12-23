@@ -95,7 +95,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className={`${isDarkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"} flex items-center justify-center min-h-screen`}>
+    <div className={`${isDarkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"} flex items-center justify-center min-h-screen`}>
       <div
         ref={formRef}
         className={`max-w-md w-full p-8 border-2 rounded-xl shadow-lg ${
@@ -180,7 +180,7 @@ export default function AuthPage() {
               <input
                 type="date"
                 name="dateOfBirth"
-                className="input w-full p-3 rounded-md border-gray-300 focus:outline-none focus:ring-2 transition duration-200"
+                className="input w-full p-3 rounded-md border-gray-300 text-gray-400 tefocus:outline-none focus:ring-2 transition duration-200"
                 required
                 onChange={handleInputChange}
               />
