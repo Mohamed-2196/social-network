@@ -106,17 +106,56 @@ export default function AuthPage() {
           <h2 ref={headingRef} className="text-4xl font-extrabold text-center">
             {isSignUp ? "Join Us" : "Welcome Back"}
           </h2>
-          {/* Dark Mode Toggle Button */}
-          <label className="inline-flex items-center relative">
+          {/* Dark Mode Checkbox */}
+          <div className="relative">
             <input
-              className="peer hidden"
-              id="toggle"
               type="checkbox"
+              id="dark-mode-toggle"
+              className="hidden peer"
               checked={isDarkMode}
               onChange={toggleTheme}
             />
-            <div className="relative w-[110px] h-[50px] bg-white peer-checked:bg-zinc-500 rounded-full after:absolute after:content-[''] after:w-[40px] after:h-[40px] after:bg-gradient-to-r from-orange-500 to-yellow-400 peer-checked:after:from-zinc-900 peer-checked:after:to-zinc-900 after:rounded-full after:top-[5px] after:left-[5px] active:after:w-[50px] peer-checked:after:left-[105px] peer-checked:after:translate-x-[-100%] shadow-sm duration-300 after:duration-300 after:shadow-md"></div>
-          </label>
+            <label
+              htmlFor="dark-mode-toggle"
+              className="flex items-center justify-center w-12 h-12 rounded-full border border-gray-400 bg-gray-200 peer-checked:bg-gray-600 cursor-pointer transition-all"
+            >
+              {isDarkMode ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-6 h-6 text-yellow-400"
+                >
+                  <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-6 h-6 text-gray-700"
+                >
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              )}
+            </label>
+          </div>
         </div>
         {errorMessage && <div className="text-red-500 text-center mb-4">{errorMessage}</div>}
         <form className="space-y-4" onSubmit={handleSubmit} encType="multipart/form-data">
