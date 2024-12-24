@@ -48,6 +48,13 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
+    // Load dark mode preference from local storage
+    const savedTheme = JSON.parse(localStorage.getItem("darkMode"));
+    if (savedTheme !== null) {
+      setIsDarkMode(savedTheme);
+    }
+
+    // Animations with GSAP
     gsap.fromTo(
       headingRef.current,
       { opacity: 0, y: -50 },
@@ -61,7 +68,12 @@ export default function AuthPage() {
   }, []);
 
   const toggleAuthMode = () => setIsSignUp(!isSignUp);
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
+
+  const toggleTheme = () => {
+    const newDarkModeState = !isDarkMode;
+    setIsDarkMode(newDarkModeState);
+    localStorage.setItem("darkMode", JSON.stringify(newDarkModeState));
+  };
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -134,7 +146,6 @@ export default function AuthPage() {
           <h2 ref={headingRef} className="text-4xl font-extrabold text-center">
             {isSignUp ? "Join Us" : "Welcome Back"}
           </h2>
-          {/* Dark Mode Checkbox */}
           <div className="relative">
             <input
               type="checkbox"

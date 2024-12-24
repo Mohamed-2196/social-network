@@ -1,9 +1,10 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Nav from "./nav";
 import { FaImage } from 'react-icons/fa';
 
 export default function HomePage() {
+  const [isDarkMode, setIsDarkMode] = useState(false); // Track dark mode state
   const [posts, setPosts] = useState([
     { id: 1, user: 'Yousif', content: 'I am just a gay boy!', privacy: 'public', avatar: '' },
   ]);
@@ -14,6 +15,21 @@ export default function HomePage() {
   });
 
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
+  // Sync with local storage and apply dark mode
+  useEffect(() => {
+    const darkModeSetting = localStorage.getItem('darkMode') === 'true';
+    setIsDarkMode(darkModeSetting);
+    document.body.classList.toggle('dark', darkModeSetting);
+  }, []);
+
+  // Toggle dark mode
+  const handleToggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem('darkMode', newMode);
+    document.body.classList.toggle('dark', newMode);
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0]; // Get the first file
@@ -68,11 +84,16 @@ export default function HomePage() {
   };
 
   return (
-    <>
-      <Nav />
+    <div
+      className={`${
+        isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'
+      } min-h-screen flex flex-col`}
+    >
+      <Nav isDarkMode={isDarkMode} />
+
       <div className="container mx-auto flex flex-col md:flex-row gap-4 p-4">
         <aside className="w-full md:w-1/4">
-          <div className="card bg-base-100 shadow-xl">
+          <div className={`card ${isDarkMode ? 'bg-gray-800' : 'bg-base-100'} shadow-xl`}>
             <div className="card-body">
               <h2 className="card-title">Suggestions to Follow</h2>
               <div className="space-y-2">
@@ -92,14 +113,86 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </aside>
-        <main className="flex-grow">
-          <div className="card bg-base-100 shadow-xl mb-4">
+
+          {/* Groups Section */}
+          <div className={`card ${isDarkMode ? 'bg-gray-800' : 'bg-base-100'} shadow-xl mt-4`}>
             <div className="card-body">
+              <h2 className="card-title">Groups</h2>
+              <div className="form-control">
+              <input 
+             type="text" 
+             placeholder="Search groups" 
+            className={`input input-bordered w-full max-w-xs ${isDarkMode ? 'bg-gray-700 text-gray-400 placeholder-gray-400' : 'bg-white text-gray-900 placeholder-gray-500'}`} 
+            />              </div>
+              <div className="space-y-2 mt-2">
+                {['Quantum', 'Reboot', 'Math', 'Gym'].map((group, index) => (
+                  <div key={index} className="flex justify-between items-center">
+                    <span>{group}</span>
+                    <button className="btn btn-outline btn-xs">Join</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+        
+        <main className="flex-grow">
+          <div className="flex justify-end mb-4">
+            <input
+              type="checkbox"
+              id="dark-mode-toggle"
+              className="hidden peer"
+              checked={isDarkMode}
+              onChange={handleToggleDarkMode}
+            />
+            <label
+              htmlFor="dark-mode-toggle"
+              className={`flex items-center justify-center w-12 h-12 rounded-full border ${isDarkMode ? 'border-gray-400 bg-gray-600' : 'border-gray-300 bg-gray-200'} cursor-pointer transition-all`}
+            >
+              {isDarkMode ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-6 h-6 text-yellow-400"
+                >
+                  <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-6 h-6 text-gray-700"
+                >
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              )}
+            </label>
+          </div>
+
+          <div className={`card ${isDarkMode ? 'bg-gray-800' : 'bg-base-100'} shadow-xl mb-4`}>
+          <div className={`card-body ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
               <h2 className="card-title">What's on your mind?</h2>
               <form onSubmit={handlePostSubmit}>
                 <textarea 
-                  className="textarea textarea-bordered w-full" 
+                  className={`textarea textarea-bordered w-full ${isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-white text-gray-900'}`} 
                   placeholder="Write something..."
                   value={postData.content}
                   onChange={(e) => setPostData({ ...postData, content: e.target.value })}
@@ -114,7 +207,7 @@ export default function HomePage() {
                     {postData.image && <span className="text-success">Image uploaded</span>}
                   </div>
                   <select 
-                    className="select select-bordered select-sm"
+                    className={`select select-bordered select-sm ${isDarkMode ? 'bg-gray-700' : ''}`}
                     value={postData.privacy}
                     onChange={(e) => setPostData({ ...postData, privacy: e.target.value })}
                   >
@@ -129,9 +222,11 @@ export default function HomePage() {
               </form>
             </div>
           </div>
+
+          {/* Display posts */}
           <div className="space-y-4">
             {posts.map((post) => (
-              <div key={post.id} className="card bg-base-100 shadow-xl">
+              <div key={post.id} className={`card shadow-xl ${isDarkMode ? 'bg-gray-800' : 'bg-base-100'}`}>
                 <div className="card-body">
                   <div className="flex items-center gap-2">
                     <div className="avatar">
@@ -139,42 +234,23 @@ export default function HomePage() {
                         <img src={post.avatar} alt={post.user} />
                       </div>
                     </div>
-                    <div>
-                      <a href={`/profile/${post.user.toLowerCase()}`} className="font-bold link link-hover">{post.user}</a>
-                      <p className="text-sm text-base-content text-opacity-60">{post.privacy}</p>
-                    </div>
+                    <span className="font-semibold">{post.user}</span>
                   </div>
                   <p>{post.content}</p>
-                  {post.image && <img src={post.image} alt="Post" className="rounded-lg mt-2" />}
-                  <div className="card-actions justify-end">
-                    <button className="btn btn-sm">Like</button>
-                    <button className="btn btn-sm">Comment</button>
-                    <button className="btn btn-sm">Share</button>
+                  {post.image && (
+                    <div className="mt-2">
+                      <img src={post.image} alt="Post image" className="w-full h-auto rounded" />
+                    </div>
+                  )}
+                  <div className="mt-2 text-sm text-gray-500">
+                    Privacy: <span className={`badge ${post.privacy === 'public' ? 'badge-info' : post.privacy === 'almost private' ? 'badge-warning' : 'badge-error'}`}>{post.privacy}</span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </main>
-        <aside className="w-full md:w-1/4">
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Groups</h2>
-              <div className="form-control">
-                <input type="text" placeholder="Search groups" className="input input-bordered w-full max-w-xs" />
-              </div>
-              <div className="space-y-2 mt-2">
-                {['Quantum', 'reboot', 'Math', 'Gym'].map((group, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <span>{group}</span>
-                    <button className="btn btn-outline btn-xs">Join</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </aside>
       </div>
-    </>
+    </div>
   );
 }

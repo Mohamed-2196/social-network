@@ -13,6 +13,6 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/createpost", CreatePostHandler).Methods("POST")
 	r.HandleFunc("/profile/edit", EditProfileHandler).Methods("POST")
 	r.HandleFunc("/ws", Ws).Methods("GET") 
-	
+	r.HandleFunc("/createdposts", CreatedPostsHandler).Methods("POST")
 
 }
