@@ -89,7 +89,7 @@ export default function HomePage() {
         isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'
       } min-h-screen flex flex-col`}
     >
-      <Nav />
+      <Nav isDarkMode={isDarkMode} />
 
       <div className="container mx-auto flex flex-col md:flex-row gap-4 p-4">
         <aside className="w-full md:w-1/4">
