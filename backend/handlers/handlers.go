@@ -8,12 +8,14 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/signup", SignUpHandler).Methods("POST")  // Specify POST method
 	r.HandleFunc("/signin", SignInHandler).Methods("POST")  // Specify POST method
 	r.HandleFunc("/logout", SignOutHandler).Methods("POST") // Specify POST method
-	r.HandleFunc("/cook", Validcookie).Methods("POST")       // Specify GET method
+	r.HandleFunc("/cook", Validcookie).Methods("POST")      // Specify GET method
 	r.HandleFunc("/profile", UserDataHandler).Methods("POST")
 	r.HandleFunc("/createpost", CreatePostHandler).Methods("POST")
 	r.HandleFunc("/profile/edit", EditProfileHandler).Methods("POST")
-	r.HandleFunc("/ws", Ws).Methods("GET") 
+	r.HandleFunc("/group", HandleGroup).Methods("POST")
+	r.HandleFunc("/ws", Ws).Methods("GET")
 	r.HandleFunc("/createdposts", CreatedPostsHandler).Methods("POST")
+	r.HandleFunc("/test", TestHandler).Methods("POST")
 	r.HandleFunc("/likepost", LikePostHandler).Methods("POST")
 	r.HandleFunc("/user/profile", GetUserProfileHandler).Methods("GET")
 	r.HandleFunc("/follow", SendFollowRequestHandler).Methods("POST")

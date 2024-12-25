@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 function MakeGroup({
   selectedUsers,
@@ -10,7 +10,7 @@ function MakeGroup({
   onClose: () => void;
 }) {
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-  const router = useRouter();
+  // const router = useRouter();
 
   // Add types for groupData
   const [groupData, setGroupData] = useState<{
