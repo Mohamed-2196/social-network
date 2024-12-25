@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FaUserPlus, FaUsers, FaCalendarAlt, FaCheck, FaTimes } from 'react-icons/fa';
 import Nav from '../components/nav';
 import { Loading } from '../components/loading';
-import { Error } from '../components/error';
+import { Bug } from '../components/error';
 import { useRouter } from 'next/navigation';
 
 export default function NotificationPage() {
@@ -69,7 +69,7 @@ export default function NotificationPage() {
   const handleReject = (notificationId) => handle(notificationId, 'reject');
 
   if (loading) return <Loading />;
-  if (error) return <Error message={error.message} />;
+  if (error) return <Bug message={error.message} />;
 
   return (
     <>

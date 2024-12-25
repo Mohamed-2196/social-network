@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FaLock, FaGlobe, FaUserSecret, FaBirthdayCake } from 'react-icons/fa';
 import Nav from '../components/nav';
 import { Loading } from '../components/loading';
-import { Error } from '../components/error';
+import { Bug } from '../components/error';
 import Post from '../components/posts'; // Import the Post component
 
 export default function ProfilePage() {
@@ -180,7 +180,7 @@ export default function ProfilePage() {
   }
 
   if (error) {
-    return <Error message="An error occurred while fetching data." />;
+    return <Bug message="An error occurred while fetching data." />;
   }
 
   return (

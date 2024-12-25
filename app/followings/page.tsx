@@ -5,16 +5,16 @@ import { useRouter } from 'next/navigation';
 import { FaSearch, FaUserPlus, FaUserCheck } from 'react-icons/fa';
 import Nav from '../components/nav';
 import { Loading } from '../components/loading';
-import { Error } from '../components/error';
+import { Bug } from '../components/error';
 
 export default function FollowingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [followings, setFollowings] = useState([]); // Ensure it's initialized as an empty array
+  const [followings, setFollowings] = useState([]); // Initialize as an empty array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
   const router = useRouter();
-  const serverUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/followings`; // Update to followings endpoint
+  const serverUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/followings`;
 
   useEffect(() => {
     const fetchFollowings = async () => {
@@ -31,11 +31,8 @@ export default function FollowingsPage() {
         const data = await response.json();
         console.log(data); // Log the response data for debugging
 
-        if (data.following) { // Check if 'following' is the correct key based on your API response
-          setFollowings(data.following); // Assuming your API returns { following: [...] }
-        } else {
-          throw new Error('Unexpected response structure');
-        }
+        // Check if 'following' is an array
+          setFollowings(data.following);
       } catch (err) {
         setError(err);
       } finally {
@@ -69,17 +66,19 @@ export default function FollowingsPage() {
   };
 
   // Ensure followings is an array before filtering
-  const filteredFollowings = Array.isArray(followings) ? followings.filter(following => 
-    following.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${following.first_name || ''} ${following.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  const filteredFollowings = Array.isArray(followings) && followings.length > 0 
+    ? followings.filter(following => 
+        (following.nickname && following.nickname.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (`${following.first_name || ''} ${following.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase()))
+      ) 
+    : [];
 
   const handleProfileClick = (userId) => {
     router.push(`/profilepage/${userId}`); 
   };
 
   if (loading) return <Loading />;
-  if (error) return <Error message={error.message} />;
+  if (error) return <Bug message={error.message} />;
 
   return (
     <>
@@ -110,14 +109,14 @@ export default function FollowingsPage() {
                 >
                   <img 
                     src={`${process.env.NEXT_PUBLIC_SERVER_URL}/uploads/${following.image}`} 
-                    alt={`${following.first_name} ${following.last_name}`}
+                    alt={`${following.first_name || ''} ${following.last_name || ''}`}
                     className="h-16 w-16 rounded-full object-cover mr-4"
                   />
                   <div className="flex-grow">
                     <p className="text-gray-800 font-medium">
-                      {following.first_name} {following.last_name}
+                      {following.first_name || ''} {following.last_name || ''}
                     </p>
-                    <p className="text-sm text-gray-500">{following.nickname}</p>
+                    <p className="text-sm text-gray-500">{following.nickname || 'No nickname'}</p>
                   </div>
                   <button 
                     onClick={(e) => {

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaSearch, FaUserPlus, FaUserCheck } from 'react-icons/fa';
 import Nav from '../components/nav';
 import { Loading } from '../components/loading';
-import { Error } from '../components/error';
+import { Bug } from '../components/error';
 
 export default function FollowersPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,17 +62,19 @@ export default function FollowersPage() {
     }
   };
 
-  const filteredFollowers = followers.filter(follower => 
-    follower.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${follower.first_name || ''} ${follower.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredFollowers = followers && followers.length > 0 
+  ? followers.filter(follower => 
+      follower.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${follower.first_name || ''} ${follower.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  : [];
 
   const handleProfileClick = (userId) => {
     router.push(`/profilepage/${userId}`); 
   };
 
   if (loading) return <Loading />;
-  if (error) return <Error message={error.message} />;
+  if (error) return <Bug message={error.message} />;
 
   return (
     <>

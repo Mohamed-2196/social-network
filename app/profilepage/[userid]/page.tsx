@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { FaLock, FaGlobe, FaUserSecret, FaBirthdayCake, FaUserPlus, FaComments } from 'react-icons/fa';
 import Nav from '../../components/nav';
 import { Loading } from '../../components/loading';
-import { Error } from '../../components/error';
+import { Bug } from '../../components/error';
 import Post from '../../components/posts';
 import { useParams } from 'next/navigation';
 
@@ -106,7 +106,7 @@ export default function UserProfilePage() {
   }
 
   if (error) {
-    return <Error message="An error occurred while fetching data." />;
+    return <Bug message="An error occurred while fetching data." />;
   }
 
   return (
