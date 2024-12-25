@@ -1,4 +1,3 @@
-// ProfilePage.js
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -25,6 +24,7 @@ export default function ProfilePage() {
     postCount: 0,
   });
   const [posts, setPosts] = useState([]);
+  const [likedPosts, setLikedPosts] = useState([]); // New state for liked posts
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('posts');
@@ -103,7 +103,8 @@ export default function ProfilePage() {
         }
 
         const data = await response.json();
-        setPosts(data.data); // Assuming the response structure contains the posts in `data`
+        setPosts(data.created_posts); // Set created posts
+        setLikedPosts(data.liked_posts); // Set liked posts
       } catch (err) {
         console.error('Fetch posts error:', err);
         setError(err);
@@ -342,15 +343,25 @@ export default function ProfilePage() {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {activeTab === 'posts' && posts.map((post) => (
+              {activeTab === 'posts' && posts && posts.length > 0 && posts.map((post) => (
                 <Post
                   key={post.id}
                   id={post.id}
                   image={imageBaseUrl + post.image}
                   content={post.content}
-                  likes={post.likes}
-                  comments={post.comments}
-                />  
+                  likeCount={post.like_count}
+                  userLiked={post.user_liked}
+                />
+              ))}
+              {activeTab === 'liked' && likedPosts && likedPosts.length > 0 && likedPosts.map((post) => (
+                <Post
+                  key={post.id}
+                  id={post.id}
+                  image={imageBaseUrl + post.image}
+                  content={post.content}
+                  likeCount={post.like_count}
+                  userLiked={post.user_liked}
+                />
               ))}
             </div>
           </div>

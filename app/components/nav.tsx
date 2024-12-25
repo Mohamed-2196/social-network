@@ -1,16 +1,41 @@
-"use client"
+"use client";
+
 import { FaBell, FaComments, FaUser } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Nav() {
   const router = useRouter();
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const response = await fetch(`${serverUrl}/notificationnum`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setNotificationCount(data.count); // Assuming the API returns { count: number }
+        } else {
+          console.error('Failed to fetch notification count');
+        }
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    };
+
+    fetchNotificationCount();
+  }, [serverUrl]);
 
   const handleLogout = async () => {
     try {
       const response = await fetch(`${serverUrl}/logout`, {
         method: 'POST',
-        credentials: 'include', // Include cookies for session management
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -26,15 +51,21 @@ export default function Nav() {
   const handleProfileNavigation = () => {
     router.push('/profile'); // Navigate to the profile page
   };
-  const handlehome = () => {
-    router.push('/'); // Navigate to the profile page
+
+  const handleHome = () => {
+    router.push('/'); // Navigate to home page
+  };
+
+  const handleNotificationClick = () => {
+    router.push('/notifications'); // Navigate to notifications page
   };
 
   return (
     <nav className="navbar bg-base-100 shadow-lg">
       <div className="flex-1">
-        <button className="btn btn-ghost normal-case text-xl" onClick={handlehome} 
-        >SocialApp</button>
+        <button className="btn btn-ghost normal-case text-xl" onClick={handleHome}>
+          SocialApp
+        </button>
       </div>
       <div className="flex-none gap-2">
         <div className="form-control">
@@ -43,7 +74,7 @@ export default function Nav() {
         <div className="relative group">
           <button 
             className="btn btn-ghost btn-circle" 
-            onClick={handleProfileNavigation} // Navigate to profile on click
+            onClick={handleProfileNavigation}
           >
             <FaUser />
           </button>
@@ -56,10 +87,12 @@ export default function Nav() {
             </button>
           </div>
         </div>
-        <button className="btn btn-ghost btn-circle">
+        <button className="btn btn-ghost btn-circle" onClick={handleNotificationClick}>
           <div className="indicator">
             <FaBell />
-            <span className="badge badge-xs badge-primary indicator-item">3</span>
+            {notificationCount > 0 && (
+              <span className="badge badge-xs badge-primary indicator-item">{notificationCount}</span>
+            )}
           </div>
         </button>
         <button className="btn btn-ghost btn-circle">

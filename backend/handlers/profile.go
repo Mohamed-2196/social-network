@@ -61,8 +61,8 @@ func UserDataHandler(w http.ResponseWriter, r *http.Request) {
     u.image, 
     u.about, 
     u.private,
-    (SELECT COUNT(*) FROM user_relationships WHERE followed_id = ?) AS followers_count,
-    (SELECT COUNT(*) FROM user_relationships WHERE follower_id = ?) AS following_count,
+(SELECT COUNT(*) FROM user_relationships WHERE followed_id = $1 AND status = 'accepted') AS followers_count,
+        (SELECT COUNT(*) FROM user_relationships WHERE follower_id = $1 AND status = 'accepted') AS following_count,
     (SELECT COUNT(*) FROM posts WHERE user_id = ?) AS post_count
 FROM users u 
 WHERE u.user_id = ?`

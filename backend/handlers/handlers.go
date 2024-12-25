@@ -14,5 +14,11 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/profile/edit", EditProfileHandler).Methods("POST")
 	r.HandleFunc("/ws", Ws).Methods("GET") 
 	r.HandleFunc("/createdposts", CreatedPostsHandler).Methods("POST")
+	r.HandleFunc("/likepost", LikePostHandler).Methods("POST")
+	r.HandleFunc("/user/profile", GetUserProfileHandler).Methods("GET")
+	r.HandleFunc("/follow", SendFollowRequestHandler).Methods("POST")
+	r.HandleFunc("/notificationnum", notificationnumber).Methods("GET")
+	r.HandleFunc("/notifications", getNotifications).Methods("POST")
+	r.HandleFunc("/managenotifications", manageNotification).Methods("POST")
 
 }
