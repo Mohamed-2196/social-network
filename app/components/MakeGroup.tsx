@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 function MakeGroup({
   selectedUsers,
@@ -10,7 +10,7 @@ function MakeGroup({
   onClose: () => void;
 }) {
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-  const router = useRouter();
+  // const router = useRouter();
 
   // Add types for groupData
   const [groupData, setGroupData] = useState<{
@@ -59,7 +59,7 @@ function MakeGroup({
   };
 
   return (
-    <div className="flex gap-2 items-center flex-col fixed right-32 h-11/12 w-96 bg-slate-200 border-2 rounded-md border-solid border-blue-400">
+    <div className="flex gap-2 items-center flex-col fixed top-32 right-32 h-11/12 w-96 bg-slate-200 border-2 rounded-md border-solid border-blue-400">
       <div className="flex w-full justify-between m-2">
         <h1 className="text-2xl m-1">Create Group</h1>
         <button

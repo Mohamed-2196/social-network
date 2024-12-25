@@ -14,7 +14,7 @@ type Group struct {
 	Visibility string   `json:"visibility"`
 }
 
-func HandleGroupChat(w http.ResponseWriter, r *http.Request) {
+func HandleGroup(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
 
 	if r.Method != http.MethodPost {

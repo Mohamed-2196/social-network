@@ -14,8 +14,8 @@ var (
 )
 
 func Ws(w http.ResponseWriter, r *http.Request) {
-	enableCORS(w,r)
-	fmt.Println("ENTER")
+	enableCORS(w, r)
+	// fmt.Println("ENTER")
 	var upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true
@@ -40,16 +40,14 @@ func Ws(w http.ResponseWriter, r *http.Request) {
 	}
 	sessionToken := c.Value
 
-
 	session := sessions[sessionToken]
-	id:= session.id
+	id := session.id
 	mu.Lock()
 	if clients[id] == nil {
 		clients[id] = []*websocket.Conn{}
 	}
 	clients[id] = append(clients[id], conn)
 	mu.Unlock()
-
 
 	defer func() {
 		mu.Lock()
@@ -61,6 +59,8 @@ func Ws(w http.ResponseWriter, r *http.Request) {
 
 	//Stimluate Reading
 	for {
-
+		if _, _, err := conn.NextReader(); err != nil {
+			break
+		}
 	}
 }

@@ -14,8 +14,14 @@ type Message struct {
 var broadcast = make(chan Message)
 
 func TestHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w, r)
 	fmt.Println("Do you reach")
-	// Parse the incoming message from the HTTP request body
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var msg Message
 	err := json.NewDecoder(r.Body).Decode(&msg)
 	if err != nil {
