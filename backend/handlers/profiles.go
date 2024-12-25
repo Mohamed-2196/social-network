@@ -22,6 +22,7 @@ type UserProfile struct {
 	PostCount      int    `json:"post_count"`
 	FollowStatus   string `json:"follow_status"` // New field to indicate follow status
 	CreatedAt string `json:"created_at"`
+	Match bool `json:"match"`
 }
 type UserProfileResponse struct {
 	Status        string      `json:"status"`
@@ -48,6 +49,7 @@ func GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	session := sessions[cookie.Value]
 	requesterID := session.id
+	requesterIDstr := strconv.Itoa(requesterID)
 	targetUserID := r.URL.Query().Get("userid")
 
 	var user UserProfile
@@ -70,11 +72,15 @@ func GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
     FROM users 
     WHERE user_id = $2`
 
+	
 	err = DB.QueryRow(userQuery, targetUserID, targetUserID).Scan(
 		&user.CreatedAt, &user.FirstName, &user.LastName, &user.Nickname,
 		&user.Email, &user.Birthday, &user.Image,
 		&user.About, &user.Private,
 		&user.FollowersCount, &user.FollowingCount, &user.PostCount)
+		if requesterIDstr == targetUserID {
+			user.Match = true // User is the current user
+		}
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return

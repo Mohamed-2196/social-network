@@ -6,7 +6,7 @@ import Nav from '../../components/nav';
 import { Loading } from '../../components/loading';
 import { Error } from '../../components/error';
 import Post from '../../components/posts';
-import { useParams } from 'next/navigation';
+import { redirect, useParams } from 'next/navigation';
 
 export default function UserProfilePage() {
   const { userid } = useParams();
@@ -25,6 +25,7 @@ export default function UserProfilePage() {
     followingCount: 0,
     postCount: 0,
     followStatus: '', // New field for follow status
+    match: false,
   });
 
   const [posts, setPosts] = useState([]);
@@ -63,9 +64,12 @@ export default function UserProfilePage() {
           followingCount: data.user.following_count,
           postCount: data.user.post_count,
           followStatus: data.user.follow_status, // Capture follow status
+          match: data.user.match,
         });
+
         setPosts(data.posts || []);
         setLikedPosts(data.liked_posts || []);
+
       } catch (err) {
         console.error('Fetch error:', err);
         setError(err);
@@ -76,7 +80,9 @@ export default function UserProfilePage() {
 
     fetchUserData();
   }, [serverUrl]);
-
+  if(userInfo.match==true) {
+    redirect("/profile")
+  }
   const handleFollow = async () => {
     const followResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/follow?userid=${userid}`, {
       method: "POST",
