@@ -86,41 +86,39 @@ const GroupPage = () => {
 
       {allGroups && (
         <>
-          {publicGroups.map((group) => (
+          {publicGroups && publicGroups.length > 0 ? (
             <>
-              <div className="flex items-center shadow-md justify-between min-h-19 border-solid border-blue-200 border-2">
-                <div className="flex items-center ml-2 gap-10">
-                  <div className="avatar">
-                    <div className="w-14 rounded-full">
-                      <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+              {publicGroups.map((group) => (
+                <div
+                  key={group.group_id} // Add a unique key for each mapped element
+                  className="flex items-center shadow-md justify-between min-h-19 border-solid border-blue-200 border-2"
+                >
+                  <div className="flex items-center ml-2 gap-10">
+                    <div className="avatar">
+                      <div className="w-14 rounded-full">
+                        <img
+                          src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                          alt="Group Avatar"
+                        />
+                      </div>
                     </div>
+                    <h1 className="text-3xl">{group.name}</h1>
                   </div>
-                  <h1 className="text-3xl">{group.name}</h1>
+                  <div className="flex items-center mr-2 gap-10">
+                    <button className="btn btn-outline btn-primary">
+                      Request To Join
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center mr-2 gap-10">
-                  <button className="btn btn-outline btn-primary">
-                    Request To Join
-                  </button>
-                </div>
-              </div>
+              ))}
             </>
-          ))}
-
-          {/* <div className="flex items-center shadow-md justify-between min-h-19 border-solid border-blue-200 border-2">
-            <div className="flex items-center ml-2 gap-10">
-              <div className="avatar">
-                <div className="w-14 rounded-full">
-                  <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                </div>
-              </div>
-              <h1 className="text-3xl">Group 2</h1>
+          ) : (
+            <div className="text-center mt-10">
+              <h2 className="text-xl text-gray-500">
+                No public groups available.
+              </h2>
             </div>
-            <div className="flex items-center mr-2 gap-10">
-              <button className="btn btn-outline btn-primary">
-                Request To Join
-              </button>
-            </div>
-          </div> */}
+          )}
         </>
       )}
 

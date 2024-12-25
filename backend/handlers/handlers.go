@@ -9,17 +9,17 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/signup", SignUpHandler).Methods("POST")
 	r.HandleFunc("/signin", SignInHandler).Methods("POST")
 	r.HandleFunc("/logout", SignOutHandler).Methods("POST")
-	
+
 	//Cookie
 	r.HandleFunc("/cook", Validcookie).Methods("POST")
-	
+
 	//Profile Stuff
 	r.HandleFunc("/profile", UserDataHandler).Methods("POST")
 	r.HandleFunc("/profile/edit", EditProfileHandler).Methods("POST")
 	r.HandleFunc("/likepost", LikePostHandler).Methods("POST")
 	r.HandleFunc("/user/profile", GetUserProfileHandler).Methods("GET")
 	r.HandleFunc("/follow", SendFollowRequestHandler).Methods("POST")
-	
+
 	//Group Stuff
 	r.HandleFunc("/group", HandleGroup).Methods("POST")
 	r.HandleFunc("/publicGroup", HandlePublicGroup).Methods("POST")
@@ -33,7 +33,10 @@ func AddHandlers(r *mux.Router) {
 	//Post Stuff
 	r.HandleFunc("/createpost", CreatePostHandler).Methods("POST")
 	r.HandleFunc("/createdposts", CreatedPostsHandler).Methods("POST")
-	
+
+	//Check Mutuals
+	r.HandleFunc("/mutuals", HandleMutuals).Methods("POST")
+
 	//Temporary Stuff for Testing purposes.
 	r.HandleFunc("/test", TestHandler).Methods("POST")
 
