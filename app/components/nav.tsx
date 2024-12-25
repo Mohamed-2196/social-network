@@ -1,8 +1,5 @@
 "use client";
-<<<<<<< HEAD
 
-=======
->>>>>>> c304d438b60ff69e6f563b02330232043028e258
 import { FaBell, FaComments, FaUser } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -56,15 +53,11 @@ export default function Nav({ isDarkMode }) {
   };
 
   const handleHome = () => {
-<<<<<<< HEAD
     router.push('/'); // Navigate to home page
   };
 
   const handleNotificationClick = () => {
     router.push('/notifications'); // Navigate to notifications page
-=======
-    router.push('/'); // Navigate to the home page
->>>>>>> c304d438b60ff69e6f563b02330232043028e258
   };
 
   return (
@@ -74,14 +67,10 @@ export default function Nav({ isDarkMode }) {
       }`}
     >
       <div className="flex-1">
-<<<<<<< HEAD
-        <button className="btn btn-ghost normal-case text-xl" onClick={handleHome}>
-=======
         <button
           className="btn btn-ghost normal-case text-xl"
           onClick={handleHome}
         >
->>>>>>> c304d438b60ff69e6f563b02330232043028e258
           SocialApp
         </button>
       </div>
@@ -96,13 +85,8 @@ export default function Nav({ isDarkMode }) {
           />
         </div>
         <div className="relative group">
-<<<<<<< HEAD
-          <button 
-            className="btn btn-ghost btn-circle" 
-=======
           <button
             className="btn btn-ghost btn-circle"
->>>>>>> c304d438b60ff69e6f563b02330232043028e258
             onClick={handleProfileNavigation}
           >
             <FaUser />
