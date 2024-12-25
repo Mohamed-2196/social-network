@@ -185,10 +185,9 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Nav />
-      <br />
-      <div className={`max-w-5xl mx-auto ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
-        <div className={`bg-white ${isDarkMode ? 'bg-opacity-90 text-white' : 'bg-opacity-90 text-black'} rounded-3xl shadow-2xl overflow-hidden backdrop-blur-lg`}>
+    <Nav isDarkMode={isDarkMode} />
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-grey-100 text-gray-900'}`}>
+      <div className={`rounded-3xl shadow-2xl overflow-hidden backdrop-blur-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-grey-100 text-black'}`}>
           <div className="md:flex">
             <div className="md:flex-shrink-0 relative">
               <div className="h-48 w-full md:w-48 bg-gradient-to-br mt-8 flex flex-col items-center justify-center">
@@ -210,7 +209,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <div className={`p-8 flex-grow ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className={`p-8 flex-grow ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'}`}>
               {/* Dark mode toggle */}
               <div className="flex justify-end mb-4">
                 <input
@@ -383,7 +382,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          <div className="px-8 py-4 bg-gray-50">
+          <div className={`px-8 py-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
             <div className="flex mb-4 border-b border-gray-200">
               <button
                 className={`w-1/2 pb-2 font-semibold ${activeTab === 'posts' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'}`}
@@ -398,7 +397,7 @@ export default function ProfilePage() {
                 Liked Posts
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isDarkMode ? 'bg-gray-800' : 'bg-grey-100'}`}>
               {activeTab === 'posts' && posts && posts.length > 0 && posts.map((post) => (
                 <Post
                   key={post.id}
