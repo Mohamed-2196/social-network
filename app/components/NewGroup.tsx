@@ -71,7 +71,7 @@ function NewGroup({
                 <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
               </div>
             </div>
-            <h1 className="text-base">User {user.name}</h1>
+            <h1 className="text-base">{user.name}</h1>
           </div>
           <input
             type="checkbox"
