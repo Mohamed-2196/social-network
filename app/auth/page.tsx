@@ -86,7 +86,12 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+    if (isSignUp && !formData.nickname) {
+      const username = formData.email.split('@')[0];
+      const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      formData.nickname = username + randomNumber;
+  }
+  
     try {
       const url = isSignUp ? `${serverUrl}/signup` : `${serverUrl}/signin`;
       const formDataToSend = new FormData();

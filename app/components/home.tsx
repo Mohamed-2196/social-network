@@ -27,8 +27,8 @@ export default function HomePage() {
   const handleToggleDarkMode = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    localStorage.setItem('darkMode', newMode);
-    document.body.classList.toggle('dark', newMode);
+    localStorage.setItem('darkMode', newMode); // Store preference in localStorage
+    document.body.classList.toggle('dark', newMode); // Apply class to body
   };
 
   const handleImageUpload = (e) => {
@@ -119,11 +119,12 @@ export default function HomePage() {
             <div className="card-body">
               <h2 className="card-title">Groups</h2>
               <div className="form-control">
-              <input 
-             type="text" 
-             placeholder="Search groups" 
-            className={`input input-bordered w-full max-w-xs ${isDarkMode ? 'bg-gray-700 text-gray-400 placeholder-gray-400' : 'bg-white text-gray-900 placeholder-gray-500'}`} 
-            />              </div>
+                <input 
+                  type="text" 
+                  placeholder="Search groups" 
+                  className={`input input-bordered w-full max-w-xs ${isDarkMode ? 'bg-gray-700 text-gray-400 placeholder-gray-400' : 'bg-white text-gray-900 placeholder-gray-500'}`} 
+                />
+              </div>
               <div className="space-y-2 mt-2">
                 {['Quantum', 'Reboot', 'Math', 'Gym'].map((group, index) => (
                   <div key={index} className="flex justify-between items-center">
@@ -188,7 +189,7 @@ export default function HomePage() {
           </div>
 
           <div className={`card ${isDarkMode ? 'bg-gray-800' : 'bg-base-100'} shadow-xl mb-4`}>
-          <div className={`card-body ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+            <div className={`card-body ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
               <h2 className="card-title">What's on your mind?</h2>
               <form onSubmit={handlePostSubmit}>
                 <textarea 
