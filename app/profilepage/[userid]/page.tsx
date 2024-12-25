@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -7,10 +6,12 @@ import Nav from '../../components/nav';
 import { Loading } from '../../components/loading';
 import { Bug } from '../../components/error';
 import Post from '../../components/posts';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from "next/navigation";
 
 export default function UserProfilePage() {
   const { userid } = useParams();
+  const router = useRouter();
+
   const [userInfo, setUserInfo] = useState({
     image: "",
     firstName: '',
@@ -25,7 +26,7 @@ export default function UserProfilePage() {
     followersCount: 0,
     followingCount: 0,
     postCount: 0,
-    followStatus: '', // New field for follow status
+    followStatus: '',
   });
 
   const [posts, setPosts] = useState([]);
@@ -63,7 +64,7 @@ export default function UserProfilePage() {
           followersCount: data.user.followers_count,
           followingCount: data.user.following_count,
           postCount: data.user.post_count,
-          followStatus: data.user.follow_status, // Capture follow status
+          followStatus: data.user.follow_status,
         });
         setPosts(data.posts || []);
         setLikedPosts(data.liked_posts || []);
@@ -90,14 +91,26 @@ export default function UserProfilePage() {
         setUserInfo((prev) => ({
           ...prev,
           followersCount: prev.followersCount + 1,
-          followStatus: 'following', // Update follow status
+          followStatus: 'following',
         }));
       } else if (responseData.status === 'pending') {
         setUserInfo((prev) => ({
           ...prev,
-          followStatus: 'request_sent', // Update follow status
+          followStatus: 'request_sent',
         }));
       }
+    }
+  };
+
+  const navigateToFollowers = () => {
+    if (!userInfo.private || userInfo.followStatus === 'following') {
+      router.push(`/followers/${userid}`);
+    }
+  };
+
+  const navigateToFollowing = () => {
+    if (!userInfo.private || userInfo.followStatus === 'following') {
+      router.push(`/followings/${userid}`);
     }
   };
 
@@ -152,11 +165,11 @@ export default function UserProfilePage() {
                 </span>
               </div>
               <div className="flex space-x-8 mt-4">
-                <div className="text-center">
+                <div className="text-center cursor-pointer" onClick={navigateToFollowers}>
                   <span className="block text-2xl font-bold text-gray-900">{userInfo.followersCount}</span>
                   <span className="text-gray-600">Followers</span>
                 </div>
-                <div className="text-center">
+                <div className="text-center cursor-pointer" onClick={navigateToFollowing}>
                   <span className="block text-2xl font-bold text-gray-900">{userInfo.followingCount}</span>
                   <span className="text-gray-600">Following</span>
                 </div>

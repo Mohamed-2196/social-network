@@ -6,6 +6,7 @@ import Nav from '../components/nav';
 import { Loading } from '../components/loading';
 import { Bug } from '../components/error';
 import Post from '../components/posts'; // Import the Post component
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
   const [userInfo, setUserInfo] = useState({
@@ -41,6 +42,7 @@ export default function ProfilePage() {
     avatar: null // Add avatar state
   });
   const [isDarkMode, setIsDarkMode] = useState(false); // State for dark mode toggle
+  const router = useRouter(); // Initialize router
 
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/profile";
   const postsUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/createdposts"; // New endpoint for fetching posts
@@ -163,7 +165,9 @@ export default function ProfilePage() {
       setEditData((prev) => ({ ...prev, avatar: file }));
     }
   };
-
+  const handleNavigate = (path) => {
+    router.push(path); // Navigate to the desired route
+  };
   const handleChange = (e, field) => {
     setEditData((prev) => ({
       ...prev,
@@ -366,20 +370,32 @@ export default function ProfilePage() {
                   Edit Profile
                 </button>
               )}
-              <div className="flex space-x-8 mt-4">
-                <div className="text-center">
-                  <span className="block text-2xl font-bold text-gray-900">{userInfo.followersCount}</span>
-                  <span className="text-gray-600">Followers</span>
-                </div>
-                <div className="text-center">
-                  <span className="block text-2xl font-bold text-gray-900">{userInfo.followingCount}</span>
-                  <span className="text-gray-600">Following</span>
-                </div>
-                <div className="text-center">
-                  <span className="block text-2xl font-bold text-gray-900">{userInfo.postCount}</span>
-                  <span className="text-gray-600">Posts</span>
-                </div>
-              </div>
+ <div className="flex space-x-8 mt-4">
+      <div
+        className="text-center cursor-pointer"
+        onClick={() => handleNavigate('/followers')}
+      >
+        <span className="block text-2xl font-bold text-gray-900">
+          {userInfo.followersCount}
+        </span>
+        <span className="text-gray-600">Followers</span>
+      </div>
+      <div
+        className="text-center cursor-pointer"
+        onClick={() => handleNavigate('/followings')}
+      >
+        <span className="block text-2xl font-bold text-gray-900">
+          {userInfo.followingCount}
+        </span>
+        <span className="text-gray-600">Followings</span>
+      </div>
+      <div className="text-center">
+        <span className="block text-2xl font-bold text-gray-900">
+          {userInfo.postCount}
+        </span>
+        <span className="text-gray-600">Posts</span>
+      </div>
+    </div>
             </div>
           </div>
           <div className={`px-8 py-4 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>

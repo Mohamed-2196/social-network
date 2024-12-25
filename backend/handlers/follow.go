@@ -78,7 +78,9 @@ func GetFollowersHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				follower.Private = isPrivate
-
+				if follower.UserID == requesterID {
+					follower.Following = true
+				}
 				if !follower.Following {
 					// Check for pending follow request
 					pendingQuery := `
@@ -130,7 +132,9 @@ func GetFollowersHandler(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					follower.Private = isPrivate;
-
+					if follower.UserID == requesterID {
+						follower.Following = true
+					}
 					// Check for pending follow request
 					pendingQuery := `
                     SELECT status FROM user_relationships 
@@ -263,6 +267,9 @@ func GetFollowingHandler(w http.ResponseWriter, r *http.Request) {
 				if err := rows.Scan(&user.UserID, &user.FirstName, &user.LastName, &user.Nickname, &user.Image, &user.Following); err != nil {
 					http.Error(w, "Error scanning following users", http.StatusInternalServerError)
 					return
+				}
+				if user.UserID == requesterID {
+					user.Following = true
 				}
 				user.Private = isPrivate // Include privacy status
 				following = append(following, user)
