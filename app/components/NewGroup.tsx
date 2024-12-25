@@ -22,7 +22,7 @@ function NewGroup({
   };
 
   return (
-    <div className="flex gap-2 items-center flex-col fixed right-32 h-11/12 w-96 bg-slate-200 border-2 rounded-md border-solid border-blue-400">
+    <div className="flex gap-2 items-center flex-col fixed top-32 right-32 h-11/12 w-96 bg-slate-200 border-2 rounded-md border-solid border-blue-400">
       <div className="flex w-full justify-between m-2">
         <h1 className="text-2xl m-1">Pick People</h1>
         <button
