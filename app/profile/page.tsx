@@ -113,7 +113,10 @@ export default function ProfilePage() {
         setError(err);
       }
     };
-
+    const darkModeSetting = localStorage.getItem("darkMode") === "true";
+    setIsDarkMode(darkModeSetting);
+    document.body.classList.toggle("dark", darkModeSetting);
+    
     fetchUserData();
     fetchPosts(); // Fetch posts on component mount
   }, []);
@@ -176,9 +179,11 @@ export default function ProfilePage() {
   };
 
   const handleToggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem("darkMode", newMode);
+    document.body.classList.toggle("dark", newMode);
   };
-
   if (isLoading) {
     return <Loading />;
   }
