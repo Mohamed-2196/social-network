@@ -272,14 +272,14 @@ export default function ProfilePage() {
                       type="text"
                       value={editData.firstName}
                       onChange={(e) => handleChange(e, 'firstName')}
-                      className="border rounded p-1 mr-2"
+                      className={`border rounded p-1 mr-2 ${isDarkMode ? 'text-black' : 'text-black'}`} 
                       placeholder="First Name"
                     />
                     <input
                       type="text"
                       value={editData.lastName}
                       onChange={(e) => handleChange(e, 'lastName')}
-                      className="border rounded p-1"
+                      className={`border rounded p-1 ${isDarkMode ? 'text-black' : 'text-black'}`} 
                       placeholder="Last Name"
                     />
                   </>
@@ -292,7 +292,7 @@ export default function ProfilePage() {
                   type="text"
                   value={editData.nickname}
                   onChange={(e) => handleChange(e, 'nickname')}
-                  className="border rounded p-1 mb-2"
+                  className={`border rounded p-1 mb-2 ${isDarkMode ? 'text-black' : 'text-black'}`}
                   placeholder="Nickname"
                 />
               ) : (
@@ -304,20 +304,20 @@ export default function ProfilePage() {
                   <select
                     value={editData.private ? 'true' : 'false'}
                     onChange={(e) => handleChange(e, 'private')}
-                    className="border rounded p-1"
-                  >
+                    className={`border rounded p-1 ${isDarkMode ? 'text-black' : 'text-black'}`} // Ensure text is black
+                    >
                     <option value="true">Private</option>
                     <option value="false">Public</option>
                   </select>
                 ) : (
-                  (userInfo.private ? 'Private' : 'Public')
+                  (userInfo.private ? 'Private' : 'Public') 
                 )}
               </span>
               {isEditing ? (
                 <textarea
                   value={editData.bio}
                   onChange={(e) => handleChange(e, 'bio')}
-                  className="border rounded p-1 mb-4 w-full"
+                  className={`border rounded p-1 mb-4 w-full mr-1 ${isDarkMode ? 'text-black' : 'text-black'}`} 
                   placeholder="Bio"
                 />
               ) : (
