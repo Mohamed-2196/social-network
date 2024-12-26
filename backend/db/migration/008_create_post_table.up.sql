@@ -7,3 +7,11 @@ CREATE TABLE IF NOT EXISTS "posts" (
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the post was created
     FOREIGN KEY ("user_id") REFERENCES "users"("user_id") -- Foreign key referencing the user
 );
+
+CREATE TABLE IF NOT EXISTS "post_allowed_users" (
+    "post_id" INTEGER NOT NULL,                      -- Foreign key referencing posts
+    "user_id" INTEGER NOT NULL,                      -- Foreign key referencing users
+    PRIMARY KEY ("post_id", "user_id"),              -- Composite primary key
+    FOREIGN KEY ("post_id") REFERENCES "posts"("post_id"),
+    FOREIGN KEY ("user_id") REFERENCES "users"("user_id")
+);

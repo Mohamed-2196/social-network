@@ -413,28 +413,37 @@ export default function ProfilePage() {
                 Liked Posts
               </button>
             </div>
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isDarkMode ? 'bg-gray-800' : 'bg-grey-100'}`}>
-              {activeTab === 'posts' && posts && posts.length > 0 && posts.map((post) => (
-                <Post
-                  key={post.id}
-                  id={post.id}
-                  image={imageBaseUrl + post.image}
-                  content={post.content}
-                  likeCount={post.like_count}
-                  userLiked={post.user_liked}
-                />
-              ))}
-              {activeTab === 'liked' && likedPosts && likedPosts.length > 0 && likedPosts.map((post) => (
-                <Post
-                  key={post.id}
-                  id={post.id}
-                  image={imageBaseUrl + post.image}
-                  content={post.content}
-                  likeCount={post.like_count}
-                  userLiked={post.user_liked}
-                />
-              ))}
-            </div>
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+  {activeTab === 'posts' && posts && posts.length > 0 && posts.map((post) => (
+    <Post
+    key={post.id}
+    id={post.id}
+    image={imageBaseUrl + post.content_image}
+    content={post.content_text}
+    likeCount={post.like_count} // Adjusted to match the field names
+    userLiked={post.user_liked} // Adjusted to match the field names
+    authorId={post.author_id} // New prop for author ID
+    authorFirstName={post.author_first_name} // New prop for author's first name
+    authorLastName={post.author_last_name} // New prop for author's last name
+    authorImage={imageBaseUrl+post.author_image} // New prop for author's image
+    />
+  ))}
+  
+  {activeTab === 'liked' && likedPosts && likedPosts.length > 0 && likedPosts.map((post) => (
+    <Post
+      key={post.id}
+      id={post.id}
+      image={imageBaseUrl + post.content_image}
+      content={post.content_text}
+      likeCount={post.like_count} // Adjusted to match the field names
+      userLiked={post.user_liked} // Adjusted to match the field names
+      authorId={post.author_id} // New prop for author ID
+      authorFirstName={post.author_first_name} // New prop for author's first name
+      authorLastName={post.author_last_name} // New prop for author's last name
+      authorImage={imageBaseUrl+post.author_image} // New prop for author's image
+    />
+  ))}
+</div>
           </div>
         </div>
       </div>

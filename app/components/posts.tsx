@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import { FaHeart, FaComment } from 'react-icons/fa';
 
-const Post = ({ id, image, content, likeCount, userLiked }) => {
+const Post = ({ 
+  id, 
+  image, 
+  content, 
+  likeCount, 
+  userLiked, 
+  authorId, 
+  authorFirstName, 
+  authorLastName, 
+  authorImage 
+}) => {
   const imageBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/uploads/";
   const isValidImage = image && image !== imageBaseUrl;
 
@@ -47,6 +57,20 @@ const Post = ({ id, image, content, likeCount, userLiked }) => {
 
   return (
     <div key={id} className="bg-white rounded-lg shadow-lg overflow-hidden transition-transform transform hover:scale-105 hover:shadow-xl duration-300">
+      <div className="p-6 flex items-start">
+        <div className="avatar mr-4">
+          <div className="w-12 rounded-full">
+            <img src={authorImage} alt={`${authorFirstName} ${authorLastName}`} />
+          </div>
+        </div>
+        <div>
+        <h3
+        className="font-semibold text-blue-500 cursor-pointer hover:underline"
+        onClick={() => window.location.href = `/profilepage/${id}`}
+    >
+        {`${authorFirstName} ${authorLastName}`}
+    </h3>       </div>
+      </div>
       {isValidImage && (
         <div className="w-full h-64">
           <img src={image} alt={`Post ${id}`} className="w-full h-full object-cover" />

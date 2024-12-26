@@ -39,6 +39,6 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/getpost" , HandlePosts).Methods("POST")
 	r.HandleFunc("/followers" , GetFollowersHandler).Methods("GET")
 	r.HandleFunc("/followings" , GetFollowingHandler).Methods("GET")
-
+	r.HandleFunc("/home" , HomeHandler).Methods("GET")
 
 }

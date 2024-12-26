@@ -81,6 +81,9 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if avatarFilename == "" {
+		avatarFilename = "pfp.webp"
+	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		http.Error(w, "Error hashing password", http.StatusInternalServerError)

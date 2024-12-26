@@ -308,6 +308,9 @@ func GetFollowingHandler(w http.ResponseWriter, r *http.Request) {
 						http.Error(w, "Error scanning following users", http.StatusInternalServerError)
 						return
 					}
+					if user.UserID == requesterID {
+						user.Following = true
+					}
 					user.Private = isPrivate // Include privacy status
 					following = append(following, user)
 				}
@@ -336,6 +339,9 @@ func GetFollowingHandler(w http.ResponseWriter, r *http.Request) {
 			if err := rows.Scan(&user.UserID, &user.FirstName, &user.LastName, &user.Nickname, &user.Image, &user.Private, &user.Following); err != nil {
 				http.Error(w, "Error scanning following users", http.StatusInternalServerError)
 				return
+			}
+			if user.UserID == requesterID {
+				user.Following = true
 			}
 			following = append(following, user)
 		}

@@ -6,7 +6,8 @@ import Nav from '../../components/nav';
 import { Loading } from '../../components/loading';
 import { Bug } from '../../components/error';
 import Post from '../../components/posts';
-import { useParams, useRouter } from "next/navigation";
+import { redirect, useParams, useRouter } from "next/navigation";
+import { match } from 'assert';
 
 export default function UserProfilePage() {
   const { userid } = useParams();
@@ -27,6 +28,7 @@ export default function UserProfilePage() {
     followingCount: 0,
     postCount: 0,
     followStatus: '',
+    match: false,
   });
 
   const [posts, setPosts] = useState([]);
@@ -36,6 +38,7 @@ export default function UserProfilePage() {
   const [activeTab, setActiveTab] = useState('posts');
 
   const serverUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/user/profile?userid=${userid}`;
+  const imageBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/uploads/";
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -65,6 +68,7 @@ export default function UserProfilePage() {
           followingCount: data.user.following_count,
           postCount: data.user.post_count,
           followStatus: data.user.follow_status,
+          match: data.user.match
         });
         setPosts(data.posts || []);
         setLikedPosts(data.liked_posts || []);
@@ -78,7 +82,9 @@ export default function UserProfilePage() {
 
     fetchUserData();
   }, [serverUrl]);
-
+  if(userInfo.match==true) {
+    redirect("/profile")
+  }
   const handleFollow = async () => {
     const followResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/follow?userid=${userid}`, {
       method: "POST",
@@ -101,7 +107,11 @@ export default function UserProfilePage() {
       }
     }
   };
-
+  useEffect(() => {
+    if (userInfo.match) {
+      router.push('/profile');
+    }
+  }, [userInfo.match, router]);
   const navigateToFollowers = () => {
     if (!userInfo.private || userInfo.followStatus === 'following') {
       router.push(`/followers/${userid}`);
@@ -216,22 +226,30 @@ export default function UserProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {activeTab === 'posts' && posts.length > 0 && posts.map((post) => (
                 <Post
-                  key={post.id}
-                  id={post.id}
-                  image={post.image ? `${process.env.NEXT_PUBLIC_SERVER_URL}/uploads/${post.image}` : ''}
-                  content={post.content}
-                  likeCount={post.like_count}
-                  userLiked={post.user_liked}
+                key={post.id}
+                id={post.id}
+                image={imageBaseUrl + post.content_image}
+                content={post.content_text}
+                likeCount={post.like_count} // Adjusted to match the field names
+                userLiked={post.user_liked} // Adjusted to match the field names
+                authorId={post.author_id} // New prop for author ID
+                authorFirstName={post.author_first_name} // New prop for author's first name
+                authorLastName={post.author_last_name} // New prop for author's last name
+                authorImage={imageBaseUrl+post.author_image}
                 />
               ))}
               {activeTab === 'liked' && likedPosts.length > 0 && likedPosts.map((post) => (
                 <Post
-                  key={post.id}
-                  id={post.id}
-                  image={post.image ? `${process.env.NEXT_PUBLIC_SERVER_URL}/uploads/${post.image}` : ''}
-                  content={post.content}
-                  likeCount={post.like_count}
-                  userLiked={post.user_liked}
+                key={post.id}
+                id={post.id}
+                image={imageBaseUrl + post.content_image}
+                content={post.content_text}
+                likeCount={post.like_count} // Adjusted to match the field names
+                userLiked={post.user_liked} // Adjusted to match the field names
+                authorId={post.author_id} // New prop for author ID
+                authorFirstName={post.author_first_name} // New prop for author's first name
+                authorLastName={post.author_last_name} // New prop for author's last name
+                authorImage={imageBaseUrl+post.author_image}
                 />
               ))}
             </div>
