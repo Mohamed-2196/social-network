@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Nav from "./nav";
 import { FaImage, FaHeart, FaComment } from "react-icons/fa";
+import { useRouter } from "next/navigation"; // Ensure you have this import at the top
 
 export default function HomePage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -15,7 +16,7 @@ export default function HomePage() {
   const [selectedFollowers, setSelectedFollowers] = useState([]);
 
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-
+  const router = useRouter();
   useEffect(() => {
     const darkModeSetting = localStorage.getItem("darkMode") === "true";
     setIsDarkMode(darkModeSetting);
@@ -403,9 +404,12 @@ export default function HomePage() {
                       >
                         <FaHeart /> {post.likeCount}
                       </button>
-                      <button className="btn btn-ghost btn-sm">
-                        <FaComment />
-                      </button>
+                      <button 
+    className="btn btn-ghost btn-sm" 
+    onClick={() => router.push(`/post/${post.id}`)} // Navigate to post detail page
+>
+    <FaComment />
+</button>
                     </div>
                     <span
                       className={`badge ${

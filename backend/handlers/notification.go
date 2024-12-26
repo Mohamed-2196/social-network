@@ -9,49 +9,86 @@ import (
 
 // PendingFollowsCountHandler counts the number of pending follows for the logged-in user.
 func notificationnumber(w http.ResponseWriter, r *http.Request) {
-	enableCORS(w, r) // Enable CORS for this endpoint
+    enableCORS(w, r) // Enable CORS for this endpoint
 
-	// Get the user ID from the session token stored in the cookie
-	c, err := r.Cookie("session_token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			http.Error(w, "No active session", http.StatusUnauthorized)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	sessionToken := c.Value
-	session, ok := sessions[sessionToken]
-	if !ok {
-		http.Error(w, "Invalid session", http.StatusUnauthorized)
-		return
-	}
+    // Get the user ID from the session token stored in the cookie
+    c, err := r.Cookie("session_token")
+    if err != nil {
+        if err == http.ErrNoCookie {
+            http.Error(w, "No active session", http.StatusUnauthorized)
+            return
+        }
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    sessionToken := c.Value
+    session, ok := sessions[sessionToken]
+    if !ok {
+        http.Error(w, "Invalid session", http.StatusUnauthorized)
+        return
+    }
 
-	userID := session.id
+    userID := session.id
 
-	// SQL query to count unread notifications
-	query := `
+    // SQL query to count unread notifications
+    countQuery := `
         SELECT COUNT(*) 
         FROM notifications 
         WHERE user_id = $1
     `
-	var count int
-	err = DB.QueryRow(query, userID).Scan(&count)
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		fmt.Println(err)
-		return
-	}
+    var count int
+    err = DB.QueryRow(countQuery, userID).Scan(&count)
+    if err != nil {
+        http.Error(w, "Database error", http.StatusInternalServerError)
+        fmt.Println(err)
+        return
+    }
 
-	// Prepare the response data
-	response := map[string]int{
-		"count": count,
-	}
+    // SQL query to get all users for the search bar
+    userQuery := `
+        SELECT user_id, first_name, last_name, image 
+        FROM users
+    `
+    
+    rows, err := DB.Query(userQuery)
+    if err != nil {
+        http.Error(w, "Database error", http.StatusInternalServerError)
+        fmt.Println(err)
+        return
+    }
+    defer rows.Close()
 
-	// Send the response
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+    var users []struct {
+        ID        string `json:"id"`
+        FirstName string `json:"first_name"`
+        LastName  string `json:"last_name"`
+        Avatar    string `json:"avatar"`
+    }
+
+    for rows.Next() {
+        var user struct {
+            ID        string `json:"id"`
+            FirstName string `json:"first_name"`
+            LastName  string `json:"last_name"`
+            Avatar    string `json:"avatar"`
+        }
+        if err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Avatar); err != nil {
+            http.Error(w, "Database error", http.StatusInternalServerError)
+            fmt.Println(err)
+            return
+        }
+        users = append(users, user)
+    }
+
+    // Prepare the response data
+    response := map[string]interface{}{
+        "count": count,
+        "users": users, // Include all users for the search bar
+    }
+
+    // Send the response
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(response)
 }
 
 func getNotifications(w http.ResponseWriter, r *http.Request) {

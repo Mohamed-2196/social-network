@@ -8,9 +8,12 @@ export default function Nav({ isDarkMode }) {
   const router = useRouter();
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
   const [notificationCount, setNotificationCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [users, setUsers] = useState([]); // Store user data
 
   useEffect(() => {
-    const fetchNotificationCount = async () => {
+    const fetchNotificationCountAndUsers = async () => {
       try {
         const response = await fetch(`${serverUrl}/notificationnum`, {
           method: 'GET',
@@ -20,16 +23,29 @@ export default function Nav({ isDarkMode }) {
         if (response.ok) {
           const data = await response.json();
           setNotificationCount(data.count); // Assuming the API returns { count: number }
+          setUsers(data.users); // Assuming the API returns { users: Array }
         } else {
-          console.error('Failed to fetch notification count');
+          console.error('Failed to fetch notification count and users');
         }
       } catch (error) {
         console.error('Fetch error:', error);
       }
     };
 
-    fetchNotificationCount();
+    fetchNotificationCountAndUsers();
   }, [serverUrl]);
+
+  useEffect(() => {
+    // Filter users based on the search term
+    if (searchTerm.trim() === '') {
+      setFilteredUsers([]);
+    } else {
+      const results = users.filter(user =>
+        `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredUsers(results);
+    }
+  }, [searchTerm, users]);
 
   const handleLogout = async () => {
     try {
@@ -60,6 +76,12 @@ export default function Nav({ isDarkMode }) {
     router.push('/notifications'); // Navigate to notifications page
   };
 
+  const handleUserClick = (userId) => {
+    router.push(`/profilepage/${userId}`); // Navigate to the selected user's profile page
+    setFilteredUsers([]); // Clear search results on navigation
+    setSearchTerm(''); // Clear search input
+  };
+
   return (
     <nav
       className={`navbar shadow-lg ${
@@ -75,14 +97,30 @@ export default function Nav({ isDarkMode }) {
         </button>
       </div>
       <div className="flex-none gap-2">
-        <div className="form-control">
+        <div className="form-control relative">
           <input
             type="text"
             placeholder="Search users"
             className={`input input-bordered w-24 md:w-auto ${
               isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-white text-gray-900'
             }`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
+          {filteredUsers.length > 0 && (
+            <div className={`absolute mt-1 w-full ${isDarkMode ? 'bg-gray-700' : 'bg-white'} border rounded-md shadow-lg z-20`}>
+              {filteredUsers.map(user => (
+                <button
+                  key={user.id}
+                  className="block px-4 py-2 hover:bg-indigo-100 w-full text-left flex items-center"
+                  onClick={() => handleUserClick(user.id)}
+                >
+                  <img src={serverUrl+ "/uploads/"+user.avatar} alt={`${user.first_name} ${user.last_name}`} className="w-8 h-8 rounded-full mr-2" />
+                  <span>{user.first_name} {user.last_name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="relative group">
           <button

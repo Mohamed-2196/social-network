@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FaHeart, FaComment } from 'react-icons/fa';
+import { useRouter } from "next/navigation"; // Ensure you have this import at the top
 
 const Post = ({ 
   id, 
@@ -14,6 +15,7 @@ const Post = ({
 }) => {
   const imageBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/uploads/";
   const isValidImage = image && image !== imageBaseUrl;
+  const router = useRouter(); // Initialize the router
 
   // State to track if the post is liked and the likes count
   const [isLiked, setIsLiked] = useState(userLiked);
@@ -86,7 +88,8 @@ const Post = ({
             <FaHeart className={`text-xl ${isLiked ? 'fill-current' : ''}`} />
             <span className="font-semibold">{likes}</span>
           </button>
-          <button className="flex items-center space-x-1 hover:text-purple-600 transition duration-300">
+          <button className="flex items-center space-x-1 hover:text-purple-600 transition duration-300"     onClick={() => router.push(`/post/${id}`)} // Navigate to post detail page
+          >
             <FaComment className="text-xl" />
           </button>
         </div>

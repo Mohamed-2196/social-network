@@ -87,13 +87,25 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If the privacy is private, save allowed user IDs
-	if req.Privacy == "private" && req.SelectedFollowers != "" {
-		followerIDs := parseFollowerIDs(req.SelectedFollowers) // Split the string into a slice of IDs
-		for _, followerID := range followerIDs {
-			err = SaveAllowedUser(DB, postID, followerID)
+	if req.Privacy == "private" {
+		// Check if SelectedFollowers is empty
+		if req.SelectedFollowers != "" {
+			// Parse the comma-separated follower IDs into a slice
+			followerIDs := parseFollowerIDs(req.SelectedFollowers)
+			for _, followerID := range followerIDs {
+				err = SaveAllowedUser(DB, postID, followerID)
+				if err != nil {
+					fmt.Printf("Error saving allowed user: %v\n", err)
+					sendErrorResponse(w, "Failed to save allowed users for the post", http.StatusInternalServerError)
+					return
+				}
+			}
+		} else {
+			// If no followers selected, add the user's own ID
+			err = SaveAllowedUser(DB, postID, id) // Assuming 'id' contains the user's ID
 			if err != nil {
-				fmt.Printf("Error saving allowed user: %v\n", err)
-				sendErrorResponse(w, "Failed to save allowed users for the post", http.StatusInternalServerError)
+				fmt.Printf("Error saving allowed user (self): %v\n", err)
+				sendErrorResponse(w, "Failed to save allowed user for the post", http.StatusInternalServerError)
 				return
 			}
 		}
