@@ -66,7 +66,7 @@ const Post = ({
         <div>
         <h3
         className="font-semibold text-blue-500 cursor-pointer hover:underline"
-        onClick={() => window.location.href = `/profilepage/${id}`}
+        onClick={() => window.location.href = `/profilepage/${authorId}`}
     >
         {`${authorFirstName} ${authorLastName}`}
     </h3>       </div>
