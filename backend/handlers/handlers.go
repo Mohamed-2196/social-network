@@ -23,6 +23,7 @@ func AddHandlers(r *mux.Router) {
 	//Group Stuff
 	r.HandleFunc("/group", HandleGroup).Methods("POST")
 	r.HandleFunc("/publicGroup", HandlePublicGroup).Methods("POST")
+	r.HandleFunc("/addMembers", HandleGroupMembers).Methods("POST")
 	r.HandleFunc("/mutuals", HandleMutuals).Methods("POST")
 
 	//Sockets And Notifications
@@ -38,9 +39,9 @@ func AddHandlers(r *mux.Router) {
 
 	//Temporary Stuff for Testing purposes.
 	r.HandleFunc("/test", TestHandler).Methods("POST")
-	r.HandleFunc("/getpost", HandlePosts).Methods("POST")
-	r.HandleFunc("/followers" , GetFollowersHandler).Methods("GET")
-	r.HandleFunc("/followings" , GetFollowingHandler).Methods("GET")
-	r.HandleFunc("/home" , HomeHandler).Methods("GET")
+	// r.HandleFunc("/getpost", HandlePosts).Methods("POST")
+	r.HandleFunc("/followers", GetFollowersHandler).Methods("GET")
+	r.HandleFunc("/followings", GetFollowingHandler).Methods("GET")
+	r.HandleFunc("/home", HomeHandler).Methods("GET")
 
 }

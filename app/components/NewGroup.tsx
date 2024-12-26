@@ -60,27 +60,32 @@ function NewGroup({
           Close
         </button>
       </div>
-      {mutuals.map((user) => (
-        <div
-          key={user.name}
-          className="flex items-center shadow-md w-11/12 justify-between min-h-19 border-solid border-blue-200 border-2"
-        >
-          <div className="flex items-center ml-2 gap-10">
-            <div className="avatar">
-              <div className="w-14 rounded-full">
-                <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+      {mutuals && (
+        <>
+          {mutuals.map((user) => (
+            <div
+              key={user.name}
+              className="flex items-center shadow-md w-11/12 justify-between min-h-19 border-solid border-blue-200 border-2"
+            >
+              <div className="flex items-center ml-2 gap-10">
+                <div className="avatar">
+                  <div className="w-14 rounded-full">
+                    <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
+                  </div>
+                </div>
+                <h1 className="text-base">{user.name}</h1>
               </div>
+              <input
+                type="checkbox"
+                className="form-checkbox mr-4"
+                value={String(user.name)}
+                onChange={handleCheckboxChange}
+              />
             </div>
-            <h1 className="text-base">{user.name}</h1>
-          </div>
-          <input
-            type="checkbox"
-            className="form-checkbox mr-4"
-            value={String(user.name)}
-            onChange={handleCheckboxChange}
-          />
-        </div>
-      ))}
+          ))}
+        </>
+      )}
+
       {checkedUsers.length > 0 ? (
         <>
           <button

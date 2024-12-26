@@ -47,6 +47,25 @@ function MakeGroup({
 
       const data = await response.json();
       console.log("Success:", data);
+    } catch (error) {
+      console.error("Network Error:", error);
+    }
+
+    try {
+      const response = await fetch(`${serverUrl}/addMembers`, {
+        method: "POST",
+        body: JSON.stringify(groupData),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Response error:", errorData);
+        throw new Error(errorData.message);
+      }
+
+      const data = await response.json();
+      console.log("Success:", data);
       // router.push("/");
     } catch (error) {
       console.error("Network Error:", error);

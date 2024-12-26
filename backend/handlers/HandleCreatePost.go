@@ -38,9 +38,6 @@ type PostsResponse struct {
 	Status       string `json:"status"`
 	CreatedPosts []Post `json:"created_posts"`
 	LikedPosts   []Post `json:"liked_posts"`
-	Status       string `json:"status"`
-	CreatedPosts []Post `json:"created_posts"`
-	LikedPosts   []Post `json:"liked_posts"`
 }
 type InteractionPayload struct {
 	PostID int  `json:"postId"`
@@ -69,7 +66,7 @@ func CreatePostHandler(w http.ResponseWriter, r *http.Request) {
 	req.Content = r.FormValue("content")
 	req.Privacy = r.FormValue("privacy")
 	req.SelectedFollowers = r.FormValue("selectedFollowers") // Ensure this matches your frontend input
-	fmt.Println("HEllo",req.SelectedFollowers)
+	fmt.Println("HEllo", req.SelectedFollowers)
 	var imagefilename string
 	file, handler, err := r.FormFile("image")
 	if err == nil {
@@ -145,15 +142,7 @@ func sendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 func CreatedPostsHandler(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	enableCORS(w, r)
-	w.Header().Set("Content-Type", "application/json")
 
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
-		fmt.Println("No session cookie found:", err)
-		sendErrorResponse(w, "Session not found", http.StatusUnauthorized)
-		return
-	}
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
 		fmt.Println("No session cookie found:", err)
@@ -163,16 +152,7 @@ func CreatedPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	session := sessions[cookie.Value]
 	userID := session.id
-	session := sessions[cookie.Value]
-	userID := session.id
 
-	// Fetch created posts
-	createdPosts, err := GetPosts(DB, userID)
-	if err != nil {
-		fmt.Printf("Error fetching created posts: %v\n", err)
-		sendErrorResponse(w, "Failed to fetch created posts", http.StatusInternalServerError)
-		return
-	}
 	// Fetch created posts
 	createdPosts, err := GetPosts(DB, userID)
 	if err != nil {
@@ -188,13 +168,6 @@ func CreatedPostsHandler(w http.ResponseWriter, r *http.Request) {
 		sendErrorResponse(w, "Failed to fetch liked posts", http.StatusInternalServerError)
 		return
 	}
-	// Fetch liked posts
-	likedPosts, err := GetLikedPosts(DB, userID)
-	if err != nil {
-		fmt.Printf("Error fetching liked posts: %v\n", err)
-		sendErrorResponse(w, "Failed to fetch liked posts", http.StatusInternalServerError)
-		return
-	}
 
 	// Create response including both created and liked posts
 	response := PostsResponse{
@@ -202,18 +175,7 @@ func CreatedPostsHandler(w http.ResponseWriter, r *http.Request) {
 		CreatedPosts: createdPosts,
 		LikedPosts:   likedPosts,
 	}
-	// Create response including both created and liked posts
-	response := PostsResponse{
-		Status:       "success",
-		CreatedPosts: createdPosts,
-		LikedPosts:   likedPosts,
-	}
 
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		fmt.Printf("Error encoding response: %v\n", err)
-		sendErrorResponse(w, "Error encoding response", http.StatusInternalServerError)
-		return
-	}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		fmt.Printf("Error encoding response: %v\n", err)
 		sendErrorResponse(w, "Error encoding response", http.StatusInternalServerError)
@@ -277,7 +239,6 @@ func GetPosts(db *sql.DB, userID int) ([]Post, error) {
 }
 func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("hihi")
-	fmt.Println("hihi")
 	enableCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	cookie, err := r.Cookie("session_token")
@@ -320,7 +281,6 @@ func LikePostHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetLikedPosts(db *sql.DB, userID int) ([]Post, error) {
 	query := `
-	query := `
     SELECT p.post_id, p.content_text, p.content_image, p.privacy,
            COUNT(pi.id) AS like_count,
            MAX(CASE WHEN pi.user_id = ? THEN 1 ELSE 0 END) AS user_liked,
@@ -336,11 +296,6 @@ func GetLikedPosts(db *sql.DB, userID int) ([]Post, error) {
     ORDER BY p.created_at DESC
 `
 
-	rows, err := db.Query(query, userID, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 	rows, err := db.Query(query, userID, userID)
 	if err != nil {
 		return nil, err
@@ -368,17 +323,11 @@ func GetLikedPosts(db *sql.DB, userID int) ([]Post, error) {
 
 		posts = append(posts, post)
 	}
-		posts = append(posts, post)
-	}
 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
 
-	return posts, nil
 	return posts, nil
 }
 

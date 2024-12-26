@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Nav from "./nav";
-import { FaImage, FaHeart, FaComment } from 'react-icons/fa';
+import { FaImage, FaHeart, FaComment } from "react-icons/fa";
 
 export default function HomePage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -19,8 +19,8 @@ export default function HomePage() {
   useEffect(() => {
     const darkModeSetting = localStorage.getItem("darkMode") === "true";
     setIsDarkMode(darkModeSetting);
-    document.body.classList.toggle('dark', darkModeSetting);
-    
+    document.body.classList.toggle("dark", darkModeSetting);
+
     // Fetch posts and followers on component mount
     fetchPosts();
   }, []);
@@ -28,43 +28,47 @@ export default function HomePage() {
   const fetchPosts = async () => {
     try {
       const response = await fetch(`${serverUrl}/home`, {
-        method: 'GET',
-        credentials: 'include',
+        method: "GET",
+        credentials: "include",
       });
-  
+
       if (!response.ok) {
-        throw new Error('Failed to fetch posts');
+        throw new Error("Failed to fetch posts");
       }
-  
+
       const data = await response.json();
-  
+
       // Ensure public_posts exists and is an array before mapping
       const postsArray = Array.isArray(data.posts) ? data.posts : [];
-      setPosts(postsArray.map(post => ({
-        id: post.id,
-        user: post.author_first_name + ' ' + post.author_last_name,
-        authorId: post.author_id,  // Assuming this is available in the response
-        content: post.content_text,
-        privacy: post.privacy,
-        avatar: post.author_image,
-        likeCount: post.like_count,
-        userLiked: post.user_liked,
-        image: post.content_image,
-      })));
-  
+      setPosts(
+        postsArray.map((post) => ({
+          id: post.id,
+          user: post.author_first_name + " " + post.author_last_name,
+          authorId: post.author_id, // Assuming this is available in the response
+          content: post.content_text,
+          privacy: post.privacy,
+          avatar: post.author_image,
+          likeCount: post.like_count,
+          userLiked: post.user_liked,
+          image: post.content_image,
+        }))
+      );
+
       // Ensure followers exists and is an array before setting
-      const followersArray = Array.isArray(data.followers) ? data.followers : [];
+      const followersArray = Array.isArray(data.followers)
+        ? data.followers
+        : [];
       setFollowers(followersArray);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error("Error fetching posts:", error);
     }
   };
 
   const handleToggleDarkMode = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-    localStorage.setItem('darkMode', newMode);
-    document.body.classList.toggle('dark', newMode);
+    localStorage.setItem("darkMode", newMode);
+    document.body.classList.toggle("dark", newMode);
   };
 
   const handleImageUpload = (e) => {
@@ -86,10 +90,10 @@ export default function HomePage() {
       formDataToSend.append("content", postData.content);
       formDataToSend.append("privacy", postData.privacy);
       if (postData.image) {
-        formDataToSend.append('image', postData.image);
+        formDataToSend.append("image", postData.image);
       }
-      if (postData.privacy === 'private') {
-        formDataToSend.append('selectedFollowers', selectedFollowers.join(',')); // Join IDs as a comma-separated string
+      if (postData.privacy === "private") {
+        formDataToSend.append("selectedFollowers", selectedFollowers.join(",")); // Join IDs as a comma-separated string
       }
 
       const response = await fetch(`${serverUrl}/createpost`, {
@@ -106,22 +110,22 @@ export default function HomePage() {
 
       const data = await response.json();
       console.log("Post created successfully", data);
-      setPostData({ content: '', privacy: 'public', image: null });
+      setPostData({ content: "", privacy: "public", image: null });
       setSelectedFollowers([]); // Clear selected followers after submission
       fetchPosts(); // Refresh posts after creating a new one
     } catch (error) {
-      console.error('Error submitting post:', error);
+      console.error("Error submitting post:", error);
     }
   };
 
   const handleLikeToggle = async (postId) => {
-    const updatedPosts = posts.map(post => {
+    const updatedPosts = posts.map((post) => {
       if (post.id === postId) {
         const newLikedState = !post.userLiked;
         return {
           ...post,
           userLiked: newLikedState,
-          likeCount: newLikedState ? post.likeCount + 1 : post.likeCount - 1
+          likeCount: newLikedState ? post.likeCount + 1 : post.likeCount - 1,
         };
       }
       return post;
@@ -131,30 +135,37 @@ export default function HomePage() {
 
     try {
       const response = await fetch(`${serverUrl}/likepost`, {
-        method: 'POST',
-        body: JSON.stringify({ postId, like: !posts.find(p => p.id === postId).userLiked }),
-        credentials: 'include',
+        method: "POST",
+        body: JSON.stringify({
+          postId,
+          like: !posts.find((p) => p.id === postId).userLiked,
+        }),
+        credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update like status');
+        throw new Error("Failed to update like status");
       }
     } catch (error) {
-      console.error('Error liking post:', error);
+      console.error("Error liking post:", error);
       setPosts(posts); // Revert to the previous state if there's an error
     }
   };
 
   const toggleFollowerSelection = (followerId) => {
-    setSelectedFollowers(prevState => 
-      prevState.includes(followerId) 
-        ? prevState.filter(item => item !== followerId) 
+    setSelectedFollowers((prevState) =>
+      prevState.includes(followerId)
+        ? prevState.filter((item) => item !== followerId)
         : [...prevState, followerId]
     );
   };
 
   return (
-    <div className={`${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'} min-h-screen flex flex-col`}>
+    <div
+      className={`${
+        isDarkMode ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900"
+      } min-h-screen flex flex-col`}
+    >
       <Nav isDarkMode={isDarkMode} />
       <div className="container mx-auto flex flex-col md:flex-row gap-4 p-4">
         <aside className="w-full md:w-1/4">
@@ -167,23 +178,29 @@ export default function HomePage() {
               <h2 className="card-title">Suggestions to Follow</h2>
               <div className="space-y-2">
                 {followers.map((user, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center gap-2">
                       <div className="avatar">
                         <div className="w-8 rounded-full">
-                          <img src={`${serverUrl}/uploads/${user.image}`} alt={user.nickname} />
+                          <img
+                            src={`${serverUrl}/uploads/${user.image}`}
+                            alt={user.nickname}
+                          />
                         </div>
-                        <a
-                          href={`/profile/${user.toLowerCase()}`}
-                          className="link link-hover"
-                        >
-                          {user}
-                        </a>
                       </div>
-                      <a href={`${serverUrl}/profilepage/${user.id}`} className="link link-hover">{user.nickname}</a>
+                      <a
+                        href={`/profilepage/${user.id}`}
+                        className="link link-hover"
+                      >
+                        {user.nickname}
+                      </a>
                     </div>
-                  )
-                )}
+                    <button className="btn btn-primary btn-xs">Follow</button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -207,11 +224,29 @@ export default function HomePage() {
               } cursor-pointer transition-all`}
             >
               {isDarkMode ? (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-yellow-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-6 h-6 text-yellow-400"
+                >
                   <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
                 </svg>
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-gray-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-6 h-6 text-gray-700"
+                >
                   <circle cx="12" cy="12" r="5" />
                   <line x1="12" y1="1" x2="12" y2="3" />
                   <line x1="12" y1="21" x2="12" y2="23" />
@@ -281,26 +316,33 @@ export default function HomePage() {
                     <option value="private">Private</option>
                   </select>
                 </div>
-                {postData.privacy === 'private' && (
+                {postData.privacy === "private" && (
                   <div className="mt-4">
                     <h3 className="font-semibold">Select Followers:</h3>
                     {followers.map((follower, index) => (
                       <label key={index} className="flex items-center">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={selectedFollowers.includes(follower.id)} // Ensure you're checking the ID
                           onChange={() => toggleFollowerSelection(follower.id)} // Pass only the ID
-                          className="mr-2" 
+                          className="mr-2"
                         />
                         <div className="flex items-center gap-2">
                           <div className="avatar">
                             <div className="w-10 rounded-full">
-                              <img src={`${serverUrl}/uploads/${follower.image}`} alt={`${follower.nickname}'s avatar`} />
+                              <img
+                                src={`${serverUrl}/uploads/${follower.image}`}
+                                alt={`${follower.nickname}'s avatar`}
+                              />
                             </div>
                           </div>
                           <div>
-                            <div className="font-semibold">{follower.nickname}</div>
-                            <div>{follower.first_name} {follower.last_name}</div>
+                            <div className="font-semibold">
+                              {follower.nickname}
+                            </div>
+                            <div>
+                              {follower.first_name} {follower.last_name}
+                            </div>
                           </div>
                         </div>
                       </label>
@@ -328,22 +370,36 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <div className="avatar">
                       <div className="w-10 rounded-full">
-                        <img src={`${serverUrl}/uploads/${post.avatar}`} alt={post.user} />
+                        <img
+                          src={`${serverUrl}/uploads/${post.avatar}`}
+                          alt={post.user}
+                        />
                       </div>
                     </div>
-                    <a href={`/profilepage/${post.authorId}`} className="font-semibold link link-hover">{post.user}</a>
+                    <a
+                      href={`/profilepage/${post.authorId}`}
+                      className="font-semibold link link-hover"
+                    >
+                      {post.user}
+                    </a>
                   </div>
                   <p>{post.content}</p>
                   {post.image && (
                     <div className="mt-2">
-                      <img src={`${serverUrl}/uploads/${post.image}`} alt="Post image" className="w-full h-auto rounded" />
+                      <img
+                        src={`${serverUrl}/uploads/${post.image}`}
+                        alt="Post image"
+                        className="w-full h-auto rounded"
+                      />
                     </div>
                   )}
                   <div className="mt-2 flex justify-between items-center">
                     <div className="flex gap-4">
                       <button
                         onClick={() => handleLikeToggle(post.id)}
-                        className={`btn btn-ghost btn-sm ${post.userLiked ? 'text-red-500' : ''}`}
+                        className={`btn btn-ghost btn-sm ${
+                          post.userLiked ? "text-red-500" : ""
+                        }`}
                       >
                         <FaHeart /> {post.likeCount}
                       </button>
@@ -351,24 +407,21 @@ export default function HomePage() {
                         <FaComment />
                       </button>
                     </div>
-                    <span className={`badge ${post.privacy === 'public' ? 'badge-info' : post.privacy === 'almost_private' ? 'badge-warning' : 'badge-error'}`}>
+                    <span
+                      className={`badge ${
+                        post.privacy === "public"
+                          ? "badge-info"
+                          : post.privacy === "almost_private"
+                          ? "badge-warning"
+                          : "badge-error"
+                      }`}
+                    >
                       {post.privacy}
                     </span>
                   </div>
                 </div>
               </div>
             ))}
-            {posts2 && (
-              <>
-                {posts2.map((post) => (
-                  <>
-                    <div>{post.UID} </div>
-                    <div>{post.Content}</div>
-                    <div>{post.LikeCount}</div>
-                  </>
-                ))}
-              </>
-            )}
           </div>
         </main>
       </div>

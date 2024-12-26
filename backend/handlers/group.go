@@ -43,6 +43,8 @@ func HandleGroup(w http.ResponseWriter, r *http.Request) {
 		privacy = true
 	}
 
+	
+
 	_, err = DB.Exec("INSERT INTO groups (name, description, created_at, type) VALUES (?, ?, ?, ?)",
 		group.GroupName, group.GroupDesc, time.Now(), privacy)
 	if err != nil {
