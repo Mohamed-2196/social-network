@@ -176,7 +176,7 @@ export default function HomePage() {
             } shadow-xl`}
           >
             <div className="card-body">
-              <h2 className="card-title">Suggestions to Follow</h2>
+              <h2 className="card-title">People You May Now!</h2>
               <div className="space-y-2">
                 {followers.map((user, index) => (
                   <div
@@ -199,7 +199,6 @@ export default function HomePage() {
                         {user.nickname}
                       </a>
                     </div>
-                    <button className="btn btn-primary btn-xs">Follow</button>
                   </div>
                 ))}
               </div>
