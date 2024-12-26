@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 
 export interface Mutual {
-  userid: number;
+  user_id: number;
   name: string;
 }
 
@@ -10,23 +10,32 @@ function NewGroup({
   onSubmit,
   onClose,
 }: {
-  onSubmit: (selectedUsers: string[]) => void;
+  onSubmit: (selectedUsers: string[], selectedIDs: number[]) => void;
   onClose: () => void;
 }) {
   const [checkedUsers, setCheckedUsers] = useState<string[]>([]);
+  const [userIDs, setUserIDs] = useState<number[]>([]);
   const [mutuals, setMutuals] = useState<Mutual[]>([]);
 
   const mutualURL = `${process.env.NEXT_PUBLIC_SERVER_URL}/mutuals`;
 
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCheckboxChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    uid: number
+  ) => {
     const { value, checked } = event.target;
     setCheckedUsers((prev) =>
       checked ? [...prev, value] : prev.filter((user) => user !== value)
     );
+
+    setUserIDs((before) =>
+      checked ? [...before, uid] : before.filter((id) => id !== uid)
+    );
+
   };
 
   const handleSubmit = () => {
-    onSubmit(checkedUsers);
+    onSubmit(checkedUsers, userIDs);
   };
 
   useEffect(() => {
@@ -78,8 +87,8 @@ function NewGroup({
               <input
                 type="checkbox"
                 className="form-checkbox mr-4"
-                value={String(user.name)}
-                onChange={handleCheckboxChange}
+                value={user.name}
+                onChange={(e) => handleCheckboxChange(e, user.user_id)}
               />
             </div>
           ))}

@@ -23,6 +23,7 @@ func AddHandlers(r *mux.Router) {
 	//Group Stuff
 	r.HandleFunc("/group", HandleGroup).Methods("POST")
 	r.HandleFunc("/publicGroup", HandlePublicGroup).Methods("POST")
+	r.HandleFunc("/myGroups", HandleMyGroups).Methods("POST")
 	r.HandleFunc("/addMembers", HandleGroupMembers).Methods("POST")
 	r.HandleFunc("/mutuals", HandleMutuals).Methods("POST")
 

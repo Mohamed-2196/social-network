@@ -4,18 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 )
 
-type PublicGroup struct {
-	GroupID     int       `json:"group_id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	Type        bool      `json:"type"`
-}
-
-func HandlePublicGroup(w http.ResponseWriter, r *http.Request) {
+func HandleMyGroups(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
 
 	if r.Method != http.MethodPost {
@@ -43,17 +34,13 @@ func HandlePublicGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := session.id
+	// g.group_id, g.name, g.description, g.created_at, g.type
 	query := `
-    SELECT g.group_id, g.name, g.description, g.created_at, g.type
-FROM groups g
-WHERE g.type = 0 
-AND NOT EXISTS (
-    SELECT 1 
-    FROM group_membership gm 
-    WHERE gm.group_id = g.group_id 
-    AND gm.user_id = ?
-);
-`
+	SELECT g.group_id, g.name, g.description, g.created_at, g.type
+	FROM groups g
+	INNER JOIN group_membership gm ON g.group_id = gm.group_id
+	WHERE gm.user_id = $1
+	ORDER BY g.created_at DESC;`
 
 	rows, err := DB.Query(query, userID)
 	if err != nil {

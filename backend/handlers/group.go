@@ -11,6 +11,7 @@ type Group struct {
 	GroupName  string   `json:"groupTitle"`
 	GroupDesc  string   `json:"groupDescription"`
 	Users      []string `json:"users"`
+	UsersID    []int    `json:"ids"`
 	Visibility string   `json:"visibility"`
 }
 
@@ -42,8 +43,6 @@ func HandleGroup(w http.ResponseWriter, r *http.Request) {
 	} else {
 		privacy = true
 	}
-
-	
 
 	_, err = DB.Exec("INSERT INTO groups (name, description, created_at, type) VALUES (?, ?, ?, ?)",
 		group.GroupName, group.GroupDesc, time.Now(), privacy)

@@ -4,9 +4,11 @@ import React, { useState } from "react";
 
 function MakeGroup({
   selectedUsers,
+  userIDs,
   onClose,
 }: {
   selectedUsers: string[];
+  userIDs: number[];
   onClose: () => void;
 }) {
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -17,13 +19,16 @@ function MakeGroup({
     groupTitle: string;
     groupDescription: string;
     users: string[];
+    ids: number[];
     visibility: string; // Added visibility to track public/private
   }>({
     groupTitle: "",
     groupDescription: "",
     users: selectedUsers,
+    ids: userIDs,
     visibility: "private", // Default to private
   });
+  console.log(groupData, "THAT");
 
   const handleMakeGroup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,6 +57,8 @@ function MakeGroup({
     }
 
     try {
+      console.log("OVER HERE BUDDY");
+
       const response = await fetch(`${serverUrl}/addMembers`, {
         method: "POST",
         body: JSON.stringify(groupData),
@@ -80,7 +87,7 @@ function MakeGroup({
   return (
     <div className="flex gap-2 items-center flex-col fixed top-32 right-32 h-11/12 w-96 bg-slate-200 border-2 rounded-md border-solid border-blue-400">
       <div className="flex w-full justify-between m-2">
-        <h1 className="text-2xl m-1">Create Group</h1>
+        <h1 className="text-2xl m-1">Create Group </h1>
         <button
           className="btn btn-md btn-outline mr-3 btn-primary"
           onClick={onClose}

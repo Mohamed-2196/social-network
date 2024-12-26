@@ -69,6 +69,8 @@ func HandleMutuals(w http.ResponseWriter, r *http.Request) {
 		mutuals = append(mutuals, mutual)
 	}
 
+	fmt.Println(mutuals)
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(mutuals); err != nil {
 		http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
