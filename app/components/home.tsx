@@ -1,5 +1,5 @@
-'use client';
-import React, { useState, useEffect } from 'react';
+"use client";
+import React, { useState, useEffect } from "react";
 import Nav from "./nav";
 import { FaImage, FaHeart, FaComment } from 'react-icons/fa';
 
@@ -7,8 +7,8 @@ export default function HomePage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [posts, setPosts] = useState([]);
   const [postData, setPostData] = useState({
-    content: '',
-    privacy: 'public',
+    content: "",
+    privacy: "public",
     image: null,
   });
   const [followers, setFollowers] = useState([]);
@@ -17,7 +17,7 @@ export default function HomePage() {
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
   useEffect(() => {
-    const darkModeSetting = localStorage.getItem('darkMode') === 'true';
+    const darkModeSetting = localStorage.getItem("darkMode") === "true";
     setIsDarkMode(darkModeSetting);
     document.body.classList.toggle('dark', darkModeSetting);
     
@@ -83,8 +83,8 @@ export default function HomePage() {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('content', postData.content);
-      formDataToSend.append('privacy', postData.privacy);
+      formDataToSend.append("content", postData.content);
+      formDataToSend.append("privacy", postData.privacy);
       if (postData.image) {
         formDataToSend.append('image', postData.image);
       }
@@ -93,14 +93,14 @@ export default function HomePage() {
       }
 
       const response = await fetch(`${serverUrl}/createpost`, {
-        method: 'POST',
+        method: "POST",
         body: formDataToSend,
-        credentials: 'include',
+        credentials: "include",
       });
 
       if (!response.ok) {
         const errorText = await response.json();
-        console.error('Error response:', response.status, errorText);
+        console.error("Error response:", response.status, errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -158,7 +158,11 @@ export default function HomePage() {
       <Nav isDarkMode={isDarkMode} />
       <div className="container mx-auto flex flex-col md:flex-row gap-4 p-4">
         <aside className="w-full md:w-1/4">
-          <div className={`card ${isDarkMode ? 'bg-gray-800' : 'bg-base-100'} shadow-xl`}>
+          <div
+            className={`card ${
+              isDarkMode ? "bg-gray-800" : "bg-base-100"
+            } shadow-xl`}
+          >
             <div className="card-body">
               <h2 className="card-title">Suggestions to Follow</h2>
               <div className="space-y-2">
@@ -169,17 +173,22 @@ export default function HomePage() {
                         <div className="w-8 rounded-full">
                           <img src={`${serverUrl}/uploads/${user.image}`} alt={user.nickname} />
                         </div>
+                        <a
+                          href={`/profile/${user.toLowerCase()}`}
+                          className="link link-hover"
+                        >
+                          {user}
+                        </a>
                       </div>
                       <a href={`${serverUrl}/profilepage/${user.id}`} className="link link-hover">{user.nickname}</a>
                     </div>
-                    <button className="btn btn-primary btn-xs">Follow</button>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </div>
           </div>
         </aside>
-        
+
         <main className="flex-grow">
           <div className="flex justify-end mb-4">
             <input
@@ -191,7 +200,11 @@ export default function HomePage() {
             />
             <label
               htmlFor="dark-mode-toggle"
-              className={`flex items-center justify-center w-12 h-12 rounded-full border ${isDarkMode ? 'border-gray-400 bg-gray-600' : 'border-gray-300 bg-gray-200'} cursor-pointer transition-all`}
+              className={`flex items-center justify-center w-12 h-12 rounded-full border ${
+                isDarkMode
+                  ? "border-gray-400 bg-gray-600"
+                  : "border-gray-300 bg-gray-200"
+              } cursor-pointer transition-all`}
             >
               {isDarkMode ? (
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-yellow-400">
@@ -213,27 +226,50 @@ export default function HomePage() {
             </label>
           </div>
 
-          <div className={`card ${isDarkMode ? 'bg-gray-800' : 'bg-base-100'} shadow-xl mb-4`}>
-            <div className={`card-body ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+          <div
+            className={`card ${
+              isDarkMode ? "bg-gray-800" : "bg-base-100"
+            } shadow-xl mb-4`}
+          >
+            <div
+              className={`card-body ${
+                isDarkMode ? "text-gray-200" : "text-gray-900"
+              }`}
+            >
               <h2 className="card-title">What's on your mind?</h2>
               <form onSubmit={handlePostSubmit}>
-                <textarea 
-                  className={`textarea textarea-bordered w-full ${isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-white text-gray-900'}`} 
+                <textarea
+                  className={`textarea textarea-bordered w-full ${
+                    isDarkMode
+                      ? "bg-gray-700 text-gray-400"
+                      : "bg-white text-gray-900"
+                  }`}
                   placeholder="Write something..."
                   value={postData.content}
-                  onChange={(e) => setPostData({ ...postData, content: e.target.value })}
+                  onChange={(e) =>
+                    setPostData({ ...postData, content: e.target.value })
+                  }
                 ></textarea>
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center gap-2">
                     <label className="btn btn-outline btn-sm">
                       <FaImage className="mr-2" />
                       Upload Image
-                      <input type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                        accept="image/*"
+                      />
                     </label>
-                    {postData.image && <span className="text-success">Image uploaded</span>}
+                    {postData.image && (
+                      <span className="text-success">Image uploaded</span>
+                    )}
                   </div>
-                  <select 
-                    className={`select select-bordered select-sm ${isDarkMode ? 'bg-gray-700' : ''}`}
+                  <select
+                    className={`select select-bordered select-sm ${
+                      isDarkMode ? "bg-gray-700" : ""
+                    }`}
                     value={postData.privacy}
                     onChange={(e) => {
                       const newPrivacy = e.target.value;
@@ -272,7 +308,9 @@ export default function HomePage() {
                   </div>
                 )}
                 <div className="card-actions justify-end mt-2">
-                  <button type="submit" className="btn btn-primary">Post</button>
+                  <button type="submit" className="btn btn-primary">
+                    Post
+                  </button>
                 </div>
               </form>
             </div>
@@ -280,7 +318,12 @@ export default function HomePage() {
 
           <div className="space-y-4">
             {posts.map((post) => (
-              <div key={post.id} className={`card shadow-xl ${isDarkMode ? 'bg-gray-800' : 'bg-base-100'}`}>
+              <div
+                key={post.id}
+                className={`card shadow-xl ${
+                  isDarkMode ? "bg-gray-800" : "bg-base-100"
+                }`}
+              >
                 <div className="card-body">
                   <div className="flex items-center gap-2">
                     <div className="avatar">
@@ -315,6 +358,17 @@ export default function HomePage() {
                 </div>
               </div>
             ))}
+            {posts2 && (
+              <>
+                {posts2.map((post) => (
+                  <>
+                    <div>{post.UID} </div>
+                    <div>{post.Content}</div>
+                    <div>{post.LikeCount}</div>
+                  </>
+                ))}
+              </>
+            )}
           </div>
         </main>
       </div>
