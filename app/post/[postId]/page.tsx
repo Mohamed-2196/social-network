@@ -105,24 +105,37 @@ export default function PostPage() {
                             <div className="comments mt-4">
                                 <h2 className="text-xl font-semibold">Comments</h2>
                                 <ul>
-                                    {comments.length > 0 ? (
-                                        comments.map(comment => (
-                                            <li key={comment.comment_id} className="border-b py-2">
-                                                <strong 
-                                                    className="cursor-pointer" 
-                                                    onClick={() => router.push(`/profilepage/${comment.user_id}`)} // Navigate to comment author profile
-                                                >
-                                                    {comment.author_first_name} {comment.author_last_name}
-                                                </strong>: {comment.content}
-                                                {comment.image && (
-                                                    <img src={`${serverUrl}/uploads/${comment.image}`} alt="Comment Image" className="mt-2 w-48 h-auto rounded" />
-                                                )}
-                                            </li>
-                                        ))
-                                    ) : (
-                                        <li className="py-2">No comments yet.</li>
-                                    )}
-                                </ul>
+    {comments.length > 0 ? (
+        comments.map(comment => (
+            <li key={comment.comment_id} className="border-b py-2 flex items-start">
+                {comment.author_image && (
+                    <img 
+                        src={`${serverUrl}/uploads/${comment.author_image}`} 
+                        alt={`${comment.author_first_name} ${comment.author_last_name}`} 
+                        className="rounded-full w-10 h-10 mr-3" // Adjust size as needed
+                    />
+                )}
+                <div>
+                    <strong 
+                        className="cursor-pointer" 
+                        onClick={() => router.push(`/profilepage/${comment.user_id}`)} // Navigate to comment author profile
+                    >
+                        {comment.author_first_name} {comment.author_last_name}
+                    </strong>: {comment.content}
+                    {comment.image && (
+                        <img 
+                            src={`${serverUrl}/uploads/${comment.image}`} 
+                            alt="Comment Image" 
+                            className="mt-2 w-48 h-auto rounded" 
+                        />
+                    )}
+                </div>
+            </li>
+        ))
+    ) : (
+        <li className="py-2">No comments yet.</li>
+    )}
+</ul>
                             </div>
                             <form onSubmit={handleCommentSubmit} className="mt-4">
                                 <textarea

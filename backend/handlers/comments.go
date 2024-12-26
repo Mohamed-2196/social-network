@@ -191,44 +191,69 @@ func GetPostAndCommentsHandler(w http.ResponseWriter, r *http.Request) {
 
 // CreateCommentHandler handles comment creation.
 func CreateCommentHandler(w http.ResponseWriter, r *http.Request) {
-	enableCORS(w, r)
-	w.Header().Set("Content-Type", "application/json")
+    enableCORS(w, r)
+    w.Header().Set("Content-Type", "application/json")
 
-	Content := r.FormValue("content")
-	postId := r.FormValue("postId") // Ensure this matches your frontend input
-	var imagefilename string
-	file, handler, err := r.FormFile("image")
-	if err == nil {
-		defer file.Close()
-		imagefilename, err = saveFile(file, handler)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			fmt.Println(err)
-			return
-		}
-	}
+    Content := r.FormValue("content")
+    postId := r.FormValue("postId") // Ensure this matches your frontend input
+    var imagefilename string
+    file, handler, err := r.FormFile("image")
+    if err == nil {
+        defer file.Close()
+        imagefilename, err = saveFile(file, handler)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            fmt.Println(err)
+            return
+        }
+    }
 
-	// Retrieve user ID from session (assuming you have session management in place)
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
-		sendErrorResponse(w, "Session not found", http.StatusUnauthorized)
-		return
-	}
+    // Retrieve user ID from session (assuming you have session management in place)
+    cookie, err := r.Cookie("session_token")
+    if err != nil {
+        sendErrorResponse(w, "Session not found", http.StatusUnauthorized)
+        return
+    }
 
-	session := sessions[cookie.Value]
-	userID := session.id
+    session := sessions[cookie.Value]
+    userID := session.id
 
-	// Insert new comment into the database
-	query := `
+    // Insert new comment into the database
+    query := `
         INSERT INTO comments (post_id, user_id, content, image) 
         VALUES (?, ?, ?, ?)
     `
-	_, err = DB.Exec(query, postId, userID, Content, imagefilename)
-	if err != nil {
-		http.Error(w, "Failed to create comment", http.StatusInternalServerError)
-		return
-	}
+    result, err := DB.Exec(query, postId, userID, Content, imagefilename)
+    if err != nil {
+        http.Error(w, "Failed to create comment", http.StatusInternalServerError)
+        return
+    }
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Comment created successfully"})
+    // Get the ID of the newly created comment
+    commentID, err := result.LastInsertId()
+    if err != nil {
+        http.Error(w, "Failed to retrieve comment ID", http.StatusInternalServerError)
+        return
+    }
+
+    // Retrieve the full comment details from the database
+    var comment Comment
+    selectQuery := `
+        SELECT c.comment_id, c.post_id, c.user_id, c.content, c.image, 
+               u.first_name AS author_first_name, u.last_name AS author_last_name, u.image AS author_image
+        FROM comments c 
+        JOIN users u ON c.user_id = u.user_id
+        WHERE c.comment_id = ?
+    `
+    err = DB.QueryRow(selectQuery, commentID).Scan(&comment.CommentID, &comment.PostID, &comment.UserID, 
+        &comment.Content, &comment.Image, &comment.AuthorFirstName, &comment.AuthorLastName, &comment.AuthorImage)
+    if err != nil {
+        http.Error(w, "Failed to retrieve comment details", http.StatusInternalServerError)
+		fmt.Println(err)
+        return
+    }
+
+    // Return the newly created comment as a JSON response
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(comment)
 }
