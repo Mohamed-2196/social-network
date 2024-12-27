@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 
@@ -12,6 +15,12 @@ var (
 	clients = make(map[int][]*websocket.Conn)
 	mu      sync.Mutex
 )
+
+type Messagee struct {
+	SenderID    int    `json:"sender_id"`
+	RecipientID int    `json:"recipient_id"`
+	Content     string `json:"content"`
+}
 
 func Ws(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
@@ -59,8 +68,25 @@ func Ws(w http.ResponseWriter, r *http.Request) {
 
 	//Stimluate Reading
 	for {
-		if _, _, err := conn.NextReader(); err != nil {
+
+		_, r, err := conn.NextReader()
+		if err != nil {
+			fmt.Println("Error reading message:", err)
 			break
 		}
+
+		var message bytes.Buffer
+		if _, err := message.ReadFrom(r); err != nil {
+			log.Println("Error reading message:", err)
+			return
+		}
+
+		var msg Messagee
+		err = json.Unmarshal(message.Bytes(), &msg)
+		if err != nil {
+			log.Println("Error unmarshalling message:", err)
+			continue
+		}
+		msg.SenderID = id
 	}
 }

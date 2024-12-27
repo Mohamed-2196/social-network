@@ -47,7 +47,7 @@ const page = () => {
           {/* Typing Component */}
           <div className="fixed bottom-0 right-0 w-[70%] p-4 bg-gray-800 text-white mt-auto">
             <div className="flex items-center space-x-4">
-              <button className="btn btn-outline">Default</button>
+              <button className="btn btn-outline">Send</button>
               <input
                 type="text"
                 className="w-full p-2 rounded bg-gray-700 text-white"

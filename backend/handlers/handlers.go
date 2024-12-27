@@ -46,4 +46,7 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/home", HomeHandler).Methods("GET")
 	r.HandleFunc("/post",GetPostAndCommentsHandler).Methods("GET")
 	r.HandleFunc("/comments", CreateCommentHandler).Methods("POST")
+
+	//chat stuff 
+	r.HandleFunc("/chat/info" , GetChatInfo).Methods("GET")
 }

@@ -85,6 +85,11 @@ export default function UserProfilePage() {
   if(userInfo.match==true) {
     redirect("/profile")
   }
+
+  const handleNavigateToChat = (receiverId) => {
+    router.push(`/chat/receiver_id?receiverId=${receiverId}`); // Navigate to the chat page
+  };
+
   const handleFollow = async () => {
     const followResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/follow?userid=${userid}`, {
       method: "POST",
@@ -202,7 +207,7 @@ export default function UserProfilePage() {
                     <FaUserPlus className="inline mr-1" /> Follow
                   </button>
                 )}
-                <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300">
+                <button onClick={() => handleNavigateToChat(userid)} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300">
                   <FaComments className="inline mr-1" /> Chat
                 </button>
               </div>
