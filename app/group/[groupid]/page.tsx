@@ -1,13 +1,20 @@
+"use client"
 import React from "react";
 import Nav from "../../components/nav";
-import ChatBox from "../../components/ChatBox";
-import Chatpic from "../../components/chatpic";
+import GroupBox from "../../components/GroupBox";
+import GroupPic from "../../components/groupPic";
 import { useParams } from "next/navigation";
+import Poll from "../../components/Poll"
+import { useState } from "react";
 
 const page = () => {
+  const [popUpIsVisible , setPopUpIsVisible] = useState(false)
   const { groupid } = useParams();
   // const router = useRouter();
 
+  const togglePopup = () => {
+    setPopUpIsVisible(!popUpIsVisible);
+  }
   return (
     <>
       <div>
@@ -27,25 +34,25 @@ const page = () => {
               <li>
                 <a>
                   {" "}
-                  <Chatpic /> lg item 1
+                  <GroupPic /> lg item 1
                 </a>
               </li>
               <li>
                 <a>
                   {" "}
-                  <Chatpic /> lg item 1
+                  <GroupPic /> lg item 1
                 </a>
               </li>
               <li>
                 <a>
                   {" "}
-                  <Chatpic /> lg item 1
+                  <GroupPic /> lg item 1
                 </a>
               </li>
               <li>
                 <a>
                   {" "}
-                  <Chatpic /> lg item 1
+                  <GroupPic /> lg item 1
                 </a>
               </li>
             </ul>
@@ -61,14 +68,18 @@ const page = () => {
               <h2 className="card-title text-lg font-bold">Group Name</h2>
             </div>
           </div>
-
           <div className="flex-1 overflow-auto">
-            <ChatBox />
+            <GroupBox />
+            {popUpIsVisible && 
+        <div className="mb-4">
+            <Poll/>
+          </div> }
           </div>
 
           {/* Typing Component */}
           <div className="fixed bottom-0 right-0 w-[70%] p-4 bg-gray-800 text-white mt-auto">
             <div className="flex items-center space-x-4">
+            <button onClick={togglePopup} className="btn btn-outline">poll</button>
               <button className="btn btn-outline">Send</button>
               <input
                 type="text"
