@@ -5,12 +5,14 @@ import React, {
   useContext,
   ReactNode,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
 interface GlobalContextType {
   socket: WebSocket | null;
   setSocket: (value: WebSocket | null) => void;
+  subscribe: (callback: (data: any) => void) => () => void;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
@@ -19,6 +21,14 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const subscribers = useRef<((data: any) => void)[]>([]);
+
+  const subscribe = (callback: (data: any) => void) => {
+    subscribers.current.push(callback);
+    return () => {
+      subscribers.current = subscribers.current.filter(cb => cb !== callback);
+    };
+  };
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8080/ws");
@@ -36,13 +46,18 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
       console.log("WebSocket connection closed");
     };
 
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      subscribers.current.forEach(callback => callback(data));
+    };
+
     return () => {
       ws.close();
     };
   }, []);
 
   return (
-    <GlobalContext.Provider value={{ socket, setSocket }}>
+    <GlobalContext.Provider value={{ socket, setSocket, subscribe }}>
       {children}
     </GlobalContext.Provider>
   );

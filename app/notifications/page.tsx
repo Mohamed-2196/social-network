@@ -6,6 +6,7 @@ import Nav from '../components/nav';
 import { Loading } from '../components/loading';
 import { Bug } from '../components/error';
 import { useRouter } from 'next/navigation';
+import { useGlobalContext } from '../components/GlobalContext';
 
 export default function NotificationPage() {
   const [activeTab, setActiveTab] = useState('all');
@@ -14,6 +15,18 @@ export default function NotificationPage() {
   const [error, setError] = useState(null);
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/notifications";
   const router = useRouter(); // Initialize useRouter
+  const { subscribe } = useGlobalContext();
+
+  useEffect(() => {
+    const unsubscribe = subscribe((data) => {
+      if (data.type === "notifications") {
+        console.log(data.notifications);
+        setNotifications(data.notifications);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [subscribe]);
 
   const handleProfileNavigation = (senderId) => {
     router.push(`/profilepage/${senderId}`); // Navigate to the sender's profile page

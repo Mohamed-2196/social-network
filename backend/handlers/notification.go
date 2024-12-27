@@ -240,8 +240,31 @@ func manageNotification(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, "Error deleting notification", http.StatusInternalServerError)
                 return
             }
+            _, err = DB.Exec("DELETE FROM user_relationships WHERE follower_id = $1 AND followed_id = $2", senderID, userID)
+            if err != nil {
+                http.Error(w, "Error deleting notification", http.StatusInternalServerError)
+                return
+            }
         }
+        countQuery := `
+        SELECT COUNT(*) 
+        FROM notifications 
+        WHERE user_id = $1
+    `
+	var count int
+	err = DB.QueryRow(countQuery, userID).Scan(&count)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
 
+	if len(clients[userID]) > 0 {
+		for _, client := range clients[userID] {
+			sendNotificationCount(client, count)
+            Sendupdatednotification(client, userID)
+		}
+	}
     case "someOtherType":
         // Implement logic for other notification types as needed
         // ...

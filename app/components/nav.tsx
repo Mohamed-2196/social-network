@@ -3,15 +3,28 @@
 import { FaBell, FaComments, FaUser } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
+import { useGlobalContext } from './GlobalContext';
 export default function Nav({ isDarkMode }) {
+  const { subscribe } = useGlobalContext();
+
+  useEffect(() => {
+    const unsubscribe = subscribe((data) => {
+      if (data.type === "notificationCount") {
+        setNotificationCount(data.count);
+        const sound = new Audio("not.mp3");
+        sound.play();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [subscribe]);
   const router = useRouter();
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
   const [notificationCount, setNotificationCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [users, setUsers] = useState([]); // Store user data
-
+  
   useEffect(() => {
     const fetchNotificationCountAndUsers = async () => {
       try {
