@@ -5,7 +5,6 @@ import ChatBox from '../../components/ChatBox';
 import Chatpic from '../../components/chatpic';
 import { useState , useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { join } from 'node:path';
 
 
 interface ReceiverInformation {
@@ -101,7 +100,7 @@ const page = () => {
             <>
               <div className="card bg-base-200 mb-4 border-2 border-gray-300 rounded-lg">
                 <div className="card-body p-2">
-                  <h2 className="card-title text-lg font-bold"> <Chatpic image={receiverInfo.image || null}/>{receiverInfo.first_name}</h2>
+                  <h2 className="card-title text-lg font-bold"> <Chatpic image={receiverInfo.image || null}/><a href={`/profilepage/${receiverId}`} className="link link-hover">{receiverInfo.first_name}</a></h2>
                 </div>
               </div>
 
