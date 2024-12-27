@@ -1,10 +1,7 @@
 package handlers
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 
@@ -69,24 +66,24 @@ func Ws(w http.ResponseWriter, r *http.Request) {
 	//Stimluate Reading
 	for {
 
-		_, r, err := conn.NextReader()
-		if err != nil {
-			fmt.Println("Error reading message:", err)
-			break
-		}
+		// _, r, err := conn.NextReader()
+		// if err != nil {
+		// 	fmt.Println("Error reading message:", err)
+		// 	break
+		// }
 
-		var message bytes.Buffer
-		if _, err := message.ReadFrom(r); err != nil {
-			log.Println("Error reading message:", err)
-			return
-		}
+		// var message bytes.Buffer
+		// if _, err := message.ReadFrom(r); err != nil {
+		// 	log.Println("Error reading message:", err)
+		// 	return
+		// }
 
-		var msg Messagee
-		err = json.Unmarshal(message.Bytes(), &msg)
-		if err != nil {
-			log.Println("Error unmarshalling message:", err)
-			continue
-		}
-		msg.SenderID = id
+		// var msg Messagee
+		// err = json.Unmarshal(message.Bytes(), &msg)
+		// if err != nil {
+		// 	log.Println("Error unmarshalling message:", err)
+		// 	continue
+		// }
+		// msg.SenderID = id
 	}
 }
