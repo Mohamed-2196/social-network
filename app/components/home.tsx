@@ -385,14 +385,14 @@ export default function HomePage() {
                   </div>
                   <p>{post.content}</p>
                   {post.image && (
-                    <div className="mt-2">
-                      <img
-                        src={`${serverUrl}/uploads/${post.image}`}
-                        alt="Post image"
-                        className="w-full h-auto rounded"
-                      />
-                    </div>
-                  )}
+  <div className="mt-2">
+    <img
+      src={`${serverUrl}/uploads/${post.image}`}
+      alt="Post image"
+      className="w-full h-auto max-w-[600px] max-h-[400px] rounded"
+    />
+  </div>
+)}
                   <div className="mt-2 flex justify-between items-center">
                     <div className="flex gap-4">
                       <button

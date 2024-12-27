@@ -91,11 +91,11 @@ export default function AuthPage() {
       const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
       formData.nickname = username + randomNumber;
   }
-  
+  let Thurl:string =""
     try {
       const url = isSignUp ? `${serverUrl}/signup` : `${serverUrl}/signin`;
       const formDataToSend = new FormData();
-
+      Thurl = isSignUp ? "signup" : "signin"
       Object.keys(formData).forEach((key) => {
         if (formData[key] !== null && formData[key] !== "") {
           formDataToSend.append(key, formData[key]);
@@ -127,7 +127,12 @@ export default function AuthPage() {
       //   console.log("WebSocket already initialized.");
       // }
     } catch (error) {
-      setErrorMessage(error.message);
+if (Thurl == "signup") {
+  setErrorMessage("Email already used");
+
+} else {
+      setErrorMessage("wrong gmail or password");
+}
     } finally {
       setIsLoading(false);
     }

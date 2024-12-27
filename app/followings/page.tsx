@@ -78,7 +78,7 @@ export default function FollowingsPage() {
   };
 
   if (loading) return <Loading />;
-  if (error) return <Bug message={error.message} />;
+  if (error) return <Bug message={"Server error, try again later"} />;
 
   return (
     <>

@@ -7,7 +7,6 @@ import { Loading } from '../../components/loading';
 import { Bug } from '../../components/error';
 import Post from '../../components/posts';
 import { redirect, useParams, useRouter } from "next/navigation";
-import { match } from 'assert';
 
 export default function UserProfilePage() {
   const { userid } = useParams();
@@ -29,6 +28,7 @@ export default function UserProfilePage() {
     postCount: 0,
     followStatus: '',
     match: false,
+    chat: false,
   });
 
   const [posts, setPosts] = useState([]);
@@ -68,7 +68,8 @@ export default function UserProfilePage() {
           followingCount: data.user.following_count,
           postCount: data.user.post_count,
           followStatus: data.user.follow_status,
-          match: data.user.match
+          match: data.user.match,
+          chat: data.user.chat
         });
         setPosts(data.posts || []);
         setLikedPosts(data.liked_posts || []);
@@ -82,12 +83,17 @@ export default function UserProfilePage() {
 
     fetchUserData();
   }, [serverUrl]);
-  if(userInfo.match==true) {
-    redirect("/profile")
+
+  if (userInfo.match === true) {
+    redirect("/profile");
   }
 
   const handleNavigateToChat = (receiverId) => {
-    router.push(`/chat/receiver_id?receiverId=${receiverId}`); // Navigate to the chat page
+    if (!userInfo.chat) {
+      alert("You need to follow this user to chat with them.");
+    } else {
+      router.push(`/chat/receiver_id?receiverId=${receiverId}`); // Navigate to the chat page
+    }
   };
 
   const handleFollow = async () => {
@@ -103,6 +109,7 @@ export default function UserProfilePage() {
           ...prev,
           followersCount: prev.followersCount + 1,
           followStatus: 'following',
+          chat: true,  // Allow chatting after following
         }));
       } else if (responseData.status === 'pending') {
         setUserInfo((prev) => ({
@@ -112,11 +119,38 @@ export default function UserProfilePage() {
       }
     }
   };
+
+  const handleUnfollow = async () => {
+    try {
+      const unfollowResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/unfollow?userid=${userid}`, {
+        method: "POST",
+        credentials: 'include',
+      });
+
+      if (unfollowResponse.ok) {
+        const responseData = await unfollowResponse.json();
+        if (responseData.status === 'unfollowed') {
+          setUserInfo((prev) => ({
+            ...prev,
+            followersCount: prev.followersCount - 1,
+            followStatus: 'not_following',
+            chat: false,  // Disable chat when unfollowing
+          }));
+        }
+      } else {
+        console.error('Failed to unfollow:', await unfollowResponse.json());
+      }
+    } catch (error) {
+      console.error('Error during unfollow:', error);
+    }
+  };
+
   useEffect(() => {
     if (userInfo.match) {
       router.push('/profile');
     }
   }, [userInfo.match, router]);
+
   const navigateToFollowers = () => {
     if (!userInfo.private || userInfo.followStatus === 'following') {
       router.push(`/followers/${userid}`);
@@ -134,7 +168,7 @@ export default function UserProfilePage() {
   }
 
   if (error) {
-    return <Bug message="An error occurred while fetching data." />;
+    return <Bug message="User not found" />;
   }
 
   return (
@@ -195,9 +229,17 @@ export default function UserProfilePage() {
               </div>
               <div className="absolute top-4 right-4">
                 {userInfo.followStatus === 'following' ? (
-                  <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
-                    Following
-                  </button>
+                  <>
+                    <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
+                      Following
+                    </button>
+                    <button
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 ml-2"
+                      onClick={handleUnfollow}
+                    >
+                      Unfollow
+                    </button>
+                  </>
                 ) : userInfo.followStatus === 'request_sent' ? (
                   <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
                     Follow Request Sent
@@ -207,7 +249,11 @@ export default function UserProfilePage() {
                     <FaUserPlus className="inline mr-1" /> Follow
                   </button>
                 )}
-                <button onClick={() => handleNavigateToChat(userid)} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300">
+                <button 
+                  onClick={() => handleNavigateToChat(userid)} 
+                  className={`bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 ${!userInfo.chat ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                  disabled={!userInfo.chat}
+                >
                   <FaComments className="inline mr-1" /> Chat
                 </button>
               </div>
@@ -231,30 +277,30 @@ export default function UserProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {activeTab === 'posts' && posts.length > 0 && posts.map((post) => (
                 <Post
-                key={post.id}
-                id={post.id}
-                image={imageBaseUrl + post.content_image}
-                content={post.content_text}
-                likeCount={post.like_count} // Adjusted to match the field names
-                userLiked={post.user_liked} // Adjusted to match the field names
-                authorId={post.author_id} // New prop for author ID
-                authorFirstName={post.author_first_name} // New prop for author's first name
-                authorLastName={post.author_last_name} // New prop for author's last name
-                authorImage={imageBaseUrl+post.author_image}
+                  key={post.id}
+                  id={post.id}
+                  image={imageBaseUrl + post.content_image}
+                  content={post.content_text}
+                  likeCount={post.like_count}
+                  userLiked={post.user_liked}
+                  authorId={post.author_id}
+                  authorFirstName={post.author_first_name}
+                  authorLastName={post.author_last_name}
+                  authorImage={imageBaseUrl + post.author_image}
                 />
               ))}
               {activeTab === 'liked' && likedPosts.length > 0 && likedPosts.map((post) => (
                 <Post
-                key={post.id}
-                id={post.id}
-                image={imageBaseUrl + post.content_image}
-                content={post.content_text}
-                likeCount={post.like_count} // Adjusted to match the field names
-                userLiked={post.user_liked} // Adjusted to match the field names
-                authorId={post.author_id} // New prop for author ID
-                authorFirstName={post.author_first_name} // New prop for author's first name
-                authorLastName={post.author_last_name} // New prop for author's last name
-                authorImage={imageBaseUrl+post.author_image}
+                  key={post.id}
+                  id={post.id}
+                  image={imageBaseUrl + post.content_image}
+                  content={post.content_text}
+                  likeCount={post.like_count}
+                  userLiked={post.user_liked}
+                  authorId={post.author_id}
+                  authorFirstName={post.author_first_name}
+                  authorLastName={post.author_last_name}
+                  authorImage={imageBaseUrl + post.author_image}
                 />
               ))}
             </div>

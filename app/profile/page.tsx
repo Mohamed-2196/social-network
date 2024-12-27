@@ -189,7 +189,7 @@ export default function ProfilePage() {
   }
 
   if (error) {
-    return <Bug message="An error occurred while fetching data." />;
+    return <Bug message="Server Error" />;
   }
 
   return (

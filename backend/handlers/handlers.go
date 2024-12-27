@@ -19,6 +19,7 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/likepost", LikePostHandler).Methods("POST")
 	r.HandleFunc("/user/profile", GetUserProfileHandler).Methods("GET")
 	r.HandleFunc("/follow", SendFollowRequestHandler).Methods("POST")
+	r.HandleFunc("/unfollow", SendUnfollowRequestHandler).Methods("POST")
 
 	//Group Stuff
 	r.HandleFunc("/group", HandleGroup).Methods("POST")

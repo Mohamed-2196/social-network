@@ -82,7 +82,7 @@ export default function NotificationPage() {
   const handleReject = (notificationId) => handle(notificationId, 'reject');
 
   if (loading) return <Loading />;
-  if (error) return <Bug message={error.message} />;
+  if (error) return <Bug message={"Server Error"} />;
 
   return (
     <>

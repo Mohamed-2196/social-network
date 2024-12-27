@@ -74,7 +74,7 @@ export default function FollowersPage() {
   };
 
   if (loading) return <Loading />;
-  if (error) return <Bug message={error.message} />;
+  if (error) return <Bug message={"Server Error"} />;
 
   return (
     <>

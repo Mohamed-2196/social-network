@@ -26,6 +26,7 @@ type UserProfile struct {
 	FollowStatus   string `json:"follow_status"` // New field to indicate follow status
 	CreatedAt      string `json:"created_at"`
 	Match          bool   `json:"match"`
+	Chat           bool   `json:"chat"`
 }
 type UserProfileResponse struct {
 	Status        string      `json:"status"`
@@ -93,8 +94,19 @@ func GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if strconv.Itoa(requesterID) == targetUserID {
 		user.Match = true // User is the current user
 	}
+	inttargetUserID, err := strconv.Atoi(targetUserID)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
 
-	// Check the relationship status
+	chatStatus, err := CheckIfFollowing(DB, requesterID, inttargetUserID)
+	if err != nil {
+		// Handle the error appropriately, e.g. log it or return
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return // or handle accordingly
+	}
+	user.Chat = chatStatus // Assign the value to the struct field	// Check the relationship status
 	var followStatus string
 	relationshipQuery := `
         SELECT status FROM user_relationships 
@@ -302,16 +314,16 @@ func SendFollowRequestHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		return
 	}
-    fmt.Println("m")
-    fmt.Println(clients)
-    fmt.Println(clients[followedID])
+	fmt.Println("m")
+	fmt.Println(clients)
+	fmt.Println(clients[followedID])
 
 	if len(clients[followedID]) > 0 {
-        fmt.Println("mm2")
+		fmt.Println("mm2")
 		for _, client := range clients[followedID] {
-            fmt.Println("mmmm")
+			fmt.Println("mmmm")
 			sendNotificationCount(client, count)
-            Sendupdatednotification(client, followedID)
+			Sendupdatednotification(client, followedID)
 		}
 	}
 }
@@ -355,14 +367,14 @@ func sendNotificationCount(ws *websocket.Conn, count int) {
 	// Convert the message to JSON
 	jsonMessage, err := json.Marshal(message)
 	if err != nil {
-fmt.Println(err)	
-	return
+		fmt.Println(err)
+		return
 	}
 
 	// Send the JSON message through the WebSocket
 	err = ws.WriteMessage(websocket.TextMessage, jsonMessage)
 	if err != nil {
-        fmt.Println(err)	
+		fmt.Println(err)
 		return
 	}
 }
@@ -392,17 +404,17 @@ func Sendupdatednotification(ws *websocket.Conn, userID int) {
 	}
 
 	// Prepare a slice to hold notifications
-    type NewNotification struct {
-        Notifications []Notification `json:"notifications"`
-        Type string  `json:"type"`
-    }
+	type NewNotification struct {
+		Notifications []Notification `json:"notifications"`
+		Type          string         `json:"type"`
+	}
 	notifications := []Notification{}
 
 	// Iterate through the result set
 	for rows.Next() {
 		var notification Notification
 		if err := rows.Scan(&notification.ID, &notification.Type, &notification.Content, &notification.CreatedAt, &notification.HiddenInfo, &notification.SenderID); err != nil {
-            fmt.Println(err)
+			fmt.Println(err)
 			return
 		}
 		notifications = append(notifications, notification)
@@ -413,20 +425,78 @@ func Sendupdatednotification(ws *websocket.Conn, userID int) {
 		fmt.Println(err)
 		return
 	}
-    data:= NewNotification{
-        Notifications: notifications,
-        Type: "notifications",
-    }
-    jsonMessage, err := json.Marshal(data)
+	data := NewNotification{
+		Notifications: notifications,
+		Type:          "notifications",
+	}
+	jsonMessage, err := json.Marshal(data)
 	if err != nil {
-        fmt.Println(err)	
+		fmt.Println(err)
 		return
 	}
 
 	// Send the JSON message through the WebSocket
 	err = ws.WriteMessage(websocket.TextMessage, jsonMessage)
 	if err != nil {
-        fmt.Println(err)	
+		fmt.Println(err)
 		return
 	}
+}
+
+func SendUnfollowRequestHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	session := sessions[cookie.Value]
+	followerID := session.id
+	followedIDStr := r.URL.Query().Get("userid")
+	followedID, err := strconv.Atoi(followedIDStr)
+	if err != nil || followedID == followerID {
+		http.Error(w, "Invalid followed user ID", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the relationship exists
+	var relationshipID int
+	err = DB.QueryRow("SELECT id FROM user_relationships WHERE follower_id = $1 AND followed_id = $2", followerID, followedID).Scan(&relationshipID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "No relationship found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Delete the relationship
+	_, err = DB.Exec("DELETE FROM user_relationships WHERE id = $1", relationshipID)
+	if err != nil {
+		http.Error(w, "Failed to unfollow user", http.StatusInternalServerError)
+		return
+	}
+
+	// Send response
+	json.NewEncoder(w).Encode(map[string]string{"status": "unfollowed"})
+}
+
+func CheckIfFollowing(db *sql.DB, user1ID, user2ID int) (bool, error) {
+	query := `
+	SELECT EXISTS (
+		SELECT 1 FROM user_relationships 
+		WHERE (follower_id = ? AND followed_id = ? OR follower_id = ? AND followed_id = ?) 
+		AND status = 'accepted'
+	) AS is_following;`
+
+	var isFollowing bool
+	err := db.QueryRow(query, user1ID, user2ID, user2ID, user1ID).Scan(&isFollowing)
+	if err != nil {
+		return false, err
+	}
+	return isFollowing, nil
 }

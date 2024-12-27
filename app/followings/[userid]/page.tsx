@@ -80,7 +80,7 @@ export default function FollowingsPage() {
   };
 
   if (loading) return <Loading />;
-  if (error) return <Bug message={error.message} />;
+  if (error) return <Bug message={"You may not have permission to view this page"} />;
 
   return (
     <>

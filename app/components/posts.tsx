@@ -74,10 +74,14 @@ const Post = ({
     </h3>       </div>
       </div>
       {isValidImage && (
-        <div className="w-full h-64">
-          <img src={image} alt={`Post ${id}`} className="w-full h-full object-cover" />
-        </div>
-      )}
+  <div className="w-full max-h-[600px] overflow-hidden">
+    <img 
+      src={image} 
+      alt={`Post ${id}`} 
+      className="w-full h-auto max-h-[600px] object-cover" 
+    />
+  </div>
+)}
       <div className="p-6">
         <p className={`text-gray-800 mb-4 text-lg ${isValidImage ? 'line-clamp-3' : 'line-clamp-6'}`}>{content}</p>
         <div className="flex justify-between items-center text-gray-600">
