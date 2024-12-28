@@ -92,7 +92,7 @@ export default function UserProfilePage() {
     if (!userInfo.chat) {
       alert("You need to follow this user to chat with them.");
     } else {
-      router.push(`/chat/receiver_id?receiverId=${receiverId}`); // Navigate to the chat page
+      router.push(`/chat?userId=${receiverId}`); // Navigate to the chat page
     }
   };
 

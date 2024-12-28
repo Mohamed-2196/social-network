@@ -50,4 +50,6 @@ func AddHandlers(r *mux.Router) {
 
 	//chat stuff 
 	r.HandleFunc("/chat/info" , GetChatInfo).Methods("GET")
+	r.HandleFunc("/chatusers" , GetChatUsers).Methods("GET")
+	r.HandleFunc("/messages" , GetMessages).Methods("POST")
 }

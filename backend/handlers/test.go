@@ -6,12 +6,12 @@ import (
 	"net/http"
 )
 
-type Message struct {
+type Messagewww struct {
 	Username string `json:"username"`
 	Content  string `json:"content"`
 }
 
-var broadcast = make(chan Message)
+var broadcast = make(chan Messagewww)
 
 func TestHandler(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
@@ -22,7 +22,7 @@ func TestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var msg Message
+	var msg Messagewww
 	err := json.NewDecoder(r.Body).Decode(&msg)
 	if err != nil {
 		http.Error(w, "Invalid message format", http.StatusBadRequest)
