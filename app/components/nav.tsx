@@ -104,6 +104,10 @@ export default function Nav({ isDarkMode }) {
     router.push('/notifications');
   };
 
+  const handlechatClick = () => {
+    router.push('/chat');
+  };
+
   const handleUserClick = (userId) => {
     router.push(`/profilepage/${userId}`);
     setFilteredUsers([]);
@@ -211,7 +215,7 @@ export default function Nav({ isDarkMode }) {
             </div>
           )}
         </div>
-        <button onClick={handleLogout} className="btn btn-ghost btn-circle">
+        <button onClick={handlechatClick} className="btn btn-ghost btn-circle">
           <FaComments />
         </button>
       </div>

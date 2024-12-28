@@ -44,6 +44,7 @@ const Page = () => {
     if (userId) {
       setSelectedUserId(userId);
       fetchMessages(userId);
+      removechatnot(userId)
     }
   }, [searchParams]);
 
@@ -51,6 +52,7 @@ const Page = () => {
     const unsubscribe = subscribe((data) => {
       if (data.sender_id === parseInt(selectedUserId) || data.receiver_id === parseInt(selectedUserId)) {
         setMessages(prevMessages => [...prevMessages, data]);
+        removechatnot(selectedUserId)
       }
     });
 
@@ -89,6 +91,24 @@ const Page = () => {
 
     socket?.send(JSON.stringify(message));
     setMessageInput('');
+  };
+  const removechatnot = async (senderid) => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_SERVER_URL + '/mnchat', {
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify({
+          sender_id: senderid, 
+        }),
+      });
+  
+      if (response.ok) {
+      } else {
+        console.error('Failed to accept/reject/delete notification');
+      }
+    } catch (error) {
+      console.error('Error processing notification:', error);
+    }
   };
 
   if (loading) {

@@ -86,7 +86,21 @@ func Ws(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("Error sending message back to sender:", err)
 		}
+		var followerName string
+		err = DB.QueryRow("SELECT nickname FROM users WHERE user_id = $1", senderID).Scan(&followerName)
+		if err != nil {
+			http.Error(w, "Follower not found", http.StatusInternalServerError)
+			return
+		}
+		// Prepare notification content
+		notificationContent := fmt.Sprintf("%s sent you a message.", followerName) // Adjust as necessary
 
+		hiddenInfo := fmt.Sprintf("%d", msg.ReceiverID)
+        _, err = DB.Exec("INSERT INTO notifications (user_id, type, content, sender_id, hidden_info) VALUES ($1, $2, $3, $4, $5)",
+            msg.ReceiverID, "message", notificationContent, senderID, hiddenInfo)
+		if err != nil {
+			fmt.Println("Failed to create notification:", err)
+		}
 		sendMessageToRecipient(&msg)
 	}
 }
@@ -104,10 +118,22 @@ func saveMessage(msg *Message) error {
 func sendMessageToRecipient(msg *Message) {
 	mu.Lock()
 	defer mu.Unlock()
-
+	countQuery := `
+	SELECT COUNT(*) 
+	FROM notifications 
+	WHERE user_id = $1
+`
+	var count int
+	err := DB.QueryRow(countQuery, msg.ReceiverID).Scan(&count)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	recipientConns := clients[msg.ReceiverID]
 	for _, conn := range recipientConns {
 		err := conn.WriteJSON(msg)
+		sendNotificationCount(conn,count)
+		Sendupdatednotification(conn, msg.ReceiverID)
 		if err != nil {
 			fmt.Println("Error sending message to recipient:", err)
 		}
