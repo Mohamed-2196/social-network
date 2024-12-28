@@ -36,7 +36,6 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('posts');
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const serverUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/user/profile?userid=${userid}`;
   const imageBaseUrl = process.env.NEXT_PUBLIC_SERVER_URL + "/uploads/";
@@ -82,25 +81,86 @@ export default function UserProfilePage() {
       }
     };
 
-    const darkModeSetting = localStorage.getItem("darkMode") === "true";
-    setIsDarkMode(darkModeSetting);
-    document.body.classList.toggle("dark", darkModeSetting);
-
     fetchUserData();
   }, [serverUrl]);
-
-  useEffect(() => {
-    document.body.classList.toggle("dark", isDarkMode);
-  }, [isDarkMode]);
 
   if (userInfo.match === true) {
     redirect("/profile");
   }
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    localStorage.setItem("darkMode", newDarkMode);
+  const handleNavigateToChat = (receiverId) => {
+    if (!userInfo.chat) {
+      alert("You need to follow this user to chat with them.");
+    } else {
+      router.push(`/chat?userId=${receiverId}`); // Navigate to the chat page
+    }
+  };
+
+  const handleFollow = async () => {
+    const followResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/follow?userid=${userid}`, {
+      method: "POST",
+      credentials: 'include',
+    });
+
+    if (followResponse.ok) {
+      const responseData = await followResponse.json();
+      if (responseData.status === 'accepted') {
+        setUserInfo((prev) => ({
+          ...prev,
+          followersCount: prev.followersCount + 1,
+          followStatus: 'following',
+          chat: true,  // Allow chatting after following
+        }));
+      } else if (responseData.status === 'pending') {
+        setUserInfo((prev) => ({
+          ...prev,
+          followStatus: 'request_sent',
+        }));
+      }
+    }
+  };
+
+  const handleUnfollow = async () => {
+    try {
+      const unfollowResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/unfollow?userid=${userid}`, {
+        method: "POST",
+        credentials: 'include',
+      });
+
+      if (unfollowResponse.ok) {
+        const responseData = await unfollowResponse.json();
+        if (responseData.status === 'unfollowed') {
+          setUserInfo((prev) => ({
+            ...prev,
+            followersCount: prev.followersCount - 1,
+            followStatus: 'not_following',
+            chat: false,  // Disable chat when unfollowing
+          }));
+        }
+      } else {
+        console.error('Failed to unfollow:', await unfollowResponse.json());
+      }
+    } catch (error) {
+      console.error('Error during unfollow:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (userInfo.match) {
+      router.push('/profile');
+    }
+  }, [userInfo.match, router]);
+
+  const navigateToFollowers = () => {
+    if (!userInfo.private || userInfo.followStatus === 'following') {
+      router.push(`/followers/${userid}`);
+    }
+  };
+
+  const navigateToFollowing = () => {
+    if (!userInfo.private || userInfo.followStatus === 'following') {
+      router.push(`/followings/${userid}`);
+    }
   };
 
   if (isLoading) {
@@ -113,12 +173,13 @@ export default function UserProfilePage() {
 
   return (
     <>
-      <Nav isDarkMode={isDarkMode} />
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-grey-100 text-gray-900'}`}>
-      <div className={`rounded-3xl shadow-2xl overflow-hidden backdrop-blur-lg ${isDarkMode ? 'bg-gray-700 bg-opacity-90' : 'bg-white bg-opacity-90'}`}>
+      <Nav />
+      <br />
+      <div className="max-w-5xl mx-auto">
+        <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-lg">
           <div className="md:flex">
             <div className="md:flex-shrink-0 relative">
-              <div className={`h-48 w-full md:w-48 flex flex-col items-center justify-center ${isDarkMode ? 'bg-gradient-to-br from-gray-700 to-gray-900' : 'bg-gradient-to-br'}`}>
+              <div className="h-48 w-full md:w-48 bg-gradient-to-br mt-8 flex flex-col items-center justify-center">
                 <div className="flex flex-col items-center mt-4">
                   <img
                     className="h-40 w-40 rounded-full border-2 border-blue-600 shadow-lg object-cover"
@@ -129,16 +190,16 @@ export default function UserProfilePage() {
               </div>
             </div>
             <div className="p-8 flex-grow">
-              <h1 className={`text-3xl font-extrabold mb-1 ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+              <h1 className="text-3xl font-extrabold text-gray-900 mb-1">
                 {`${userInfo.firstName} ${userInfo.lastName}`}
               </h1>
-              <p className={`text-lg ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{userInfo.username}</p>
+              <p className="text-lg text-gray-600">{userInfo.username}</p>
               <span className="flex items-center">
-                <FaUserSecret className={`mr-1 ${isDarkMode ? 'text-gray-300' : ''}`} />
+                <FaUserSecret className="mr-1" />
                 {(userInfo.private ? 'Private' : 'Public')}
               </span>
-              <p className={`mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{userInfo.bio}</p>
-              <div className={`flex items-center space-x-4 text-sm mb-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className="text-gray-700 mb-4">{userInfo.bio}</p>
+              <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
                 <span>
                   <FaGlobe className="inline mr-1" />
                   <span>{userInfo.email}</span>
@@ -153,31 +214,61 @@ export default function UserProfilePage() {
                 </span>
               </div>
               <div className="flex space-x-8 mt-4">
-                <div className={`text-center cursor-pointer ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                  <span className="block text-2xl font-bold">{userInfo.followersCount}</span>
-                  <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Followers</span>
+                <div className="text-center cursor-pointer" onClick={navigateToFollowers}>
+                  <span className="block text-2xl font-bold text-gray-900">{userInfo.followersCount}</span>
+                  <span className="text-gray-600">Followers</span>
                 </div>
-                <div className={`text-center cursor-pointer ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                  <span className="block text-2xl font-bold">{userInfo.followingCount}</span>
-                  <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Following</span>
+                <div className="text-center cursor-pointer" onClick={navigateToFollowing}>
+                  <span className="block text-2xl font-bold text-gray-900">{userInfo.followingCount}</span>
+                  <span className="text-gray-600">Following</span>
                 </div>
-                <div className={`text-center ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                  <span className="block text-2xl font-bold">{userInfo.postCount}</span>
-                  <span className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Posts</span>
+                <div className="text-center">
+                  <span className="block text-2xl font-bold text-gray-900">{userInfo.postCount}</span>
+                  <span className="text-gray-600">Posts</span>
                 </div>
+              </div>
+              <div className="absolute top-4 right-4">
+                {userInfo.followStatus === 'following' ? (
+                  <>
+                    <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
+                      Following
+                    </button>
+                    <button
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 ml-2"
+                      onClick={handleUnfollow}
+                    >
+                      Unfollow
+                    </button>
+                  </>
+                ) : userInfo.followStatus === 'request_sent' ? (
+                  <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
+                    Follow Request Sent
+                  </button>
+                ) : (
+                  <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300 mr-2" onClick={handleFollow}>
+                    <FaUserPlus className="inline mr-1" /> Follow
+                  </button>
+                )}
+                <button 
+                  onClick={() => handleNavigateToChat(userid)} 
+                  className={`bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 ${!userInfo.chat ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                  disabled={!userInfo.chat}
+                >
+                  <FaComments className="inline mr-1" /> Chat
+                </button>
               </div>
             </div>
           </div>
-          <div className={`px-8 py-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+          <div className="px-8 py-4 bg-gray-50">
             <div className="flex mb-4 border-b border-gray-200">
               <button
-                className={`w-1/2 pb-2 font-semibold ${activeTab === 'posts' ? 'border-b-2 border-blue-500' : ''} ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                className={`w-1/2 pb-2 font-semibold ${activeTab === 'posts' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'}`}
                 onClick={() => setActiveTab('posts')}
               >
                 Posts
               </button>
               <button
-                className={`w-1/2 pb-2 font-semibold ${activeTab === 'liked' ? 'border-b-2 border-blue-500' : ''} ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                className={`w-1/2 pb-2 font-semibold ${activeTab === 'liked' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'}`}
                 onClick={() => setActiveTab('liked')}
               >
                 Liked Posts
