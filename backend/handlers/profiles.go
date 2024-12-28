@@ -75,7 +75,7 @@ func GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
         about, 
         private,
         (SELECT COUNT(*) FROM user_relationships WHERE followed_id = $1 AND status = 'accepted') AS followers_count,
-        (SELECT COUNT(*) FROM user_relationships WHERE follower_id = $1 AND followed_id = $1 AND status = 'accepted') AS following_count,
+        (SELECT COUNT(*) FROM user_relationships WHERE follower_id = $1 AND status = 'accepted') AS following_count,
         (SELECT COUNT(*) FROM posts WHERE user_id = $1) AS post_count
     FROM users 
     WHERE user_id = $2`
