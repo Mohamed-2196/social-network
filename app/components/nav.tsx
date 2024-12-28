@@ -14,7 +14,8 @@ export default function Nav({ isDarkMode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [users, setUsers] = useState([]); // Store user data
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // Manage profile menu visibility
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); 
+  const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
 
   const router = useRouter();
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -108,6 +109,9 @@ export default function Nav({ isDarkMode }) {
     router.push('/chat');
   };
 
+  const handleGroupNavigation = () => {
+    router.push('/group');
+  };
   const handleUserClick = (userId) => {
     router.push(`/profilepage/${userId}`);
     setFilteredUsers([]);
@@ -117,6 +121,11 @@ export default function Nav({ isDarkMode }) {
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen); // Toggle profile menu visibility
   };
+
+  const toggleChatMenu = () => {
+    setIsChatMenuOpen(!isChatMenuOpen); // Toggle chat menu visibility
+  };
+
 
   return (
     <nav
@@ -215,9 +224,32 @@ export default function Nav({ isDarkMode }) {
             </div>
           )}
         </div>
-        <button onClick={handlechatClick} className="btn btn-ghost btn-circle">
-          <FaComments />
-        </button>
+
+               <div className="relative group">
+          <button onClick={toggleChatMenu} className="btn btn-ghost btn-circle">
+            <FaComments />
+          </button>
+          {isChatMenuOpen && (
+            <div
+              className={`absolute right-0 mt-2 w-48 ${
+                isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-white text-gray-900'
+              } border rounded-md shadow-lg z-20`}
+            >
+              <button
+                className="block px-4 py-2 hover:bg-indigo-100 w-full text-left"
+                onClick={handlechatClick}
+              >
+                Chats
+              </button>
+              <button
+                className="block px-4 py-2 hover:bg-indigo-100 w-full text-left"
+                onClick={handleGroupNavigation}
+              >
+                Groups
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );
