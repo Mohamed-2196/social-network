@@ -7,9 +7,11 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/mail"
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,7 +58,8 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseMultipartForm(10 << 20) // 10 MB max
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid form data"})
 		fmt.Println(err)
 		return
 	}
@@ -70,50 +73,63 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		Nickname:    r.FormValue("nickname"),
 		AboutMe:     r.FormValue("aboutMe"),
 	}
+
+	// Email validation
+	if _, err := mail.ParseAddress(user.Email); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid email format"})
+		return
+	}
+
 	var avatarFilename string
 	file, handler, err := r.FormFile("avatar")
 	if err == nil {
 		defer file.Close()
 		avatarFilename, err = saveFile(file, handler)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Error saving avatar"})
 			fmt.Println(err)
 			return
 		}
 	}
+
 	if avatarFilename == "" {
 		avatarFilename = "pfp.webp"
 	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Error hashing password"})
 		fmt.Println(err)
-
 		return
 	}
 
 	_, err = DB.Exec("INSERT INTO users (first_name, last_name, birthday, email, password, nickname, about, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		user.FirstName, user.LastName, user.DateOfBirth, user.Email, string(hashedPassword), user.Nickname, user.AboutMe, avatarFilename)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Email already in use"})
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Error creating user"})
+		}
 		fmt.Println(err)
-
 		return
 	}
 
 	userid, err := getUserIDByEmail(user.Email)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Error retrieving user ID"})
 		fmt.Println(err)
-
 		return
 	}
 
 	sessionToken := uuid.NewString()
-
-	sessions[sessionToken] = session{
-		id: userid,
-	}
+	sessions[sessionToken] = session{id: userid}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
@@ -133,11 +149,11 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 
 	email := r.FormValue("email")
 	password := r.FormValue("password")
-	fmt.Println(email)
-	fmt.Println(password)
+
 	// Validate input
 	if email == "" || password == "" {
-		http.Error(w, "Email and password are required", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Email and password are required"})
 		return
 	}
 
@@ -146,26 +162,29 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	err := DB.QueryRow("SELECT password FROM users WHERE email = ?", email).Scan(&storedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			http.Error(w, "User not found", http.StatusUnauthorized)
-			fmt.Println(err)
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
+			return
 		} else {
-			http.Error(w, "Server error", http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Server error"})
 			fmt.Println(err)
+			return
 		}
-		return
 	}
 
 	// Compare the provided password with the stored password
 	if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)); err != nil {
-		http.Error(w, "Invalid password", http.StatusUnauthorized)
-		fmt.Println(err)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid password"})
 		return
 	}
 
 	// Get user ID by email
 	userid, err := getUserIDByEmail(email)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Error retrieving user ID"})
 		fmt.Println(err)
 		return
 	}
@@ -188,7 +207,6 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Signed in successfully"})
 }
-
 func SignOutHandler(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r) // Enable CORS for this endpoint
 

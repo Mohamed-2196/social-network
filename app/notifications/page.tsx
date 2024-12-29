@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { FaUserPlus, FaUsers, FaCalendarAlt, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaUserPlus, FaUsers, FaCalendarAlt, FaCheck, FaTimes, FaComment } from 'react-icons/fa'; // Added FaComment for messages
 import Nav from '../components/nav';
 import { Loading } from '../components/loading';
 import { Bug } from '../components/error';
@@ -63,7 +63,7 @@ export default function NotificationPage() {
         method: 'POST',
         credentials: 'include', // Include cookies for session management
         body: JSON.stringify({
-          action: action, // Pass the action (accept or reject)
+          action: action, // Pass the action (accept, reject, delete)
           id: notificationId, // Pass the notification ID
         }),
       });
@@ -71,7 +71,7 @@ export default function NotificationPage() {
       if (response.ok) {
         setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
       } else {
-        console.error('Failed to accept/reject notification');
+        console.error('Failed to accept/reject/delete notification');
       }
     } catch (error) {
       console.error('Error processing notification:', error);
@@ -80,6 +80,7 @@ export default function NotificationPage() {
 
   const handleAccept = (notificationId) => handle(notificationId, 'accept');
   const handleReject = (notificationId) => handle(notificationId, 'reject');
+  const handleDelete = (notificationId) => handle(notificationId, 'delete');
 
   if (loading) return <Loading />;
   if (error) return <Bug message={"Server Error"} />;
@@ -114,12 +115,20 @@ export default function NotificationPage() {
                   <div 
                     key={notification.id} 
                     className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-300"
-                    onClick={() => notification.type === 'followRequest' && handleProfileNavigation(notification.sender_id)} // Navigate on click
+                    onClick={() => {
+                      if (notification.type === 'message') {
+                        handleDelete(notification.id); // Trigger delete action
+                        router.push(`/chat?userId=${notification.sender_id}`); // Navigate to chat
+                      } else if (notification.type === 'followRequest') {
+                        handleProfileNavigation(notification.sender_id); // Navigate to profile
+                      }
+                    }} // Navigate on click
                   >
                     {notification.type === 'followRequest' && <FaUserPlus className="text-blue-500 mr-4 text-xl" />}
                     {notification.type === 'groupInvitation' && <FaUsers className="text-green-500 mr-4 text-xl" />}
                     {notification.type === 'groupJoinRequest' && <FaUserPlus className="text-yellow-500 mr-4 text-xl" />}
                     {notification.type === 'groupEvent' && <FaCalendarAlt className="text-purple-500 mr-4 text-xl" />}
+                    {notification.type === 'message' && <FaComment className="text-gray-500 mr-4 text-xl" />} {/* Added icon for messages */}
   
                     <div className="flex-grow">
                       <p className="text-gray-800 font-medium">{notification.content}</p>
