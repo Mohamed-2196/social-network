@@ -89,14 +89,4 @@ func HandleGroupMembers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Members Added :D"})
 }
 
-// func getUsernameByID(id int) (string, error) {
-// 	var username string
-// 	err := DB.QueryRow("SELECT nickname FROM users WHERE user_id = ?", id).Scan(&username)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return "", fmt.Errorf("no user found with email: %s", id)
-// 		}
-// 		return "", fmt.Errorf("error querying database: %v", err)
-// 	}
-// 	return username, nil
-// }
+

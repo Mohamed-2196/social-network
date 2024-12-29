@@ -25,7 +25,11 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/group", HandleGroup).Methods("POST")
 	r.HandleFunc("/publicGroup", HandlePublicGroup).Methods("POST")
 	r.HandleFunc("/myGroups", HandleMyGroups).Methods("POST")
+	r.HandleFunc("/groupchat/{groupid}", HandleGroupChat).Methods("POST")
 	r.HandleFunc("/addMembers", HandleGroupMembers).Methods("POST")
+	r.HandleFunc("/sendGroupMessage/{groupid}", HandleGroupMessage).Methods("POST")
+	r.HandleFunc("/getGroupMessage/{groupid}", HandleGetGroupMessage).Methods("POST")
+
 	r.HandleFunc("/mutuals", HandleMutuals).Methods("POST")
 
 	//Sockets And Notifications
@@ -45,11 +49,11 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/followers", GetFollowersHandler).Methods("GET")
 	r.HandleFunc("/followings", GetFollowingHandler).Methods("GET")
 	r.HandleFunc("/home", HomeHandler).Methods("GET")
-	r.HandleFunc("/post",GetPostAndCommentsHandler).Methods("GET")
+	r.HandleFunc("/post", GetPostAndCommentsHandler).Methods("GET")
 	r.HandleFunc("/comments", CreateCommentHandler).Methods("POST")
 
-	//chat stuff 
-	r.HandleFunc("/chat/info" , GetChatInfo).Methods("GET")
-	r.HandleFunc("/chatusers" , GetChatUsers).Methods("GET")
-	r.HandleFunc("/messages" , GetMessages).Methods("POST")
+	//chat stuff
+	r.HandleFunc("/chat/info", GetChatInfo).Methods("GET")
+	r.HandleFunc("/chatusers", GetChatUsers).Methods("GET")
+	r.HandleFunc("/messages", GetMessages).Methods("POST")
 }
