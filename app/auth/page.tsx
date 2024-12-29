@@ -82,61 +82,48 @@ export default function AuthPage() {
       [name]: files ? files[0] : value,
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
     if (isSignUp && !formData.nickname) {
-      const username = formData.email.split('@')[0];
-      const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-      formData.nickname = username + randomNumber;
-  }
-  let Thurl:string =""
-    try {
-      const url = isSignUp ? `${serverUrl}/signup` : `${serverUrl}/signin`;
-      const formDataToSend = new FormData();
-      Thurl = isSignUp ? "signup" : "signin"
-      Object.keys(formData).forEach((key) => {
-        if (formData[key] !== null && formData[key] !== "") {
-          formDataToSend.append(key, formData[key]);
-        }
-      });
-
-      const response = await fetch(url, {
-        method: "POST",
-        body: formDataToSend,
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
-      }
-
-      const data = await response.json();
-      router.push("/");
-
-      // if (!socket) {
-      //   const ws = new WebSocket("ws://localhost:8080/ws");
-      //   setSocket(ws);
-
-      //   ws.onopen = () => {
-      //     console.log("Connected to WebSocket server auth");
-      //   };
-      // } else {
-      //   console.log("WebSocket already initialized.");
-      // }
-    } catch (error) {
-if (Thurl == "signup") {
-  setErrorMessage("Email already used");
-
-} else {
-      setErrorMessage("wrong gmail or password");
-}
-    } finally {
-      setIsLoading(false);
+        const username = formData.email.split('@')[0];
+        const randomNumber = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        formData.nickname = username + randomNumber;
     }
-  };
+
+    let Thurl: string = "";
+
+    try {
+        const url = isSignUp ? `${serverUrl}/signup` : `${serverUrl}/signin`;
+        const formDataToSend = new FormData();
+        Thurl = isSignUp ? "signup" : "signin";
+        
+        Object.keys(formData).forEach((key) => {
+            if (formData[key] !== null && formData[key] !== "") {
+                formDataToSend.append(key, formData[key]);
+            }
+        });
+
+        const response = await fetch(url, {
+            method: "POST",
+            body: formDataToSend,
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "An unknown error occurred"); // Use error field from server response
+        }
+
+        const data = await response.json();
+        router.push("/");
+    } catch (error) {
+        setErrorMessage(error.message); // Set the error message from the server
+    } finally {
+        setIsLoading(false);
+    }
+};
 
   return (
     <div
