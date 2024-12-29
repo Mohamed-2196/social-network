@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 type GroupPostRequest struct {
@@ -144,13 +142,13 @@ func HanldeGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query = `
-		INSERT INTO group_messages (group_id, sender_id, receiver_id, group_post_id)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO group_messages (group_id, sender_id, receiver_id, group_post_id, content)
+		VALUES (?, ?, ?, ?, ?)
 	`
 
 	for i := range members {
 		uid := members[i].UserID
-		_, err = DB.Exec(query, groupID, userID, uid, lastGroupPostID)
+		_, err = DB.Exec(query, groupID, userID, uid, lastGroupPostID, "")
 		if err != nil {
 			fmt.Println(err, "6")
 			return
@@ -181,7 +179,7 @@ func HanldeGroupPost(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var details GroupMessage
-		err := rows.Scan(&details.SenderID, &details.CreatedAt, &details.postImage, &details.postContent)
+		err := rows.Scan(&details.SenderID, &details.CreatedAt, &details.PostImage, &details.PostContent)
 		if err != nil {
 			log.Fatal("Error scanning row:", err)
 		}
@@ -194,6 +192,7 @@ func HanldeGroupPost(w http.ResponseWriter, r *http.Request) {
 
 	for i := range groupMessages {
 		groupMessages[i].CreatedAt = time.Now().Format("2006-01-02 15:04:05")
+		groupMessages[i].GroupPostID = lastGroupPostID
 		name, err := getUsernameByID(groupMessages[i].SenderID)
 		if err != nil {
 			fmt.Println(err, "P")
@@ -206,37 +205,33 @@ func HanldeGroupPost(w http.ResponseWriter, r *http.Request) {
 		uid := members[i].UserID
 		if len(clients[uid]) > 0 {
 			for _, client := range clients[uid] {
-				sendMessageToClient(client, groupMessages)
+				sendMessageToClient2(client, groupMessages)
 			}
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(groupMessages)
-	if err != nil {
-		fmt.Println("Error encoding GroupMessage:", err)
-		return
-	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "MSG SENT"})
 
 }
 
-func sendMessageToClientGroup(ws *websocket.Conn) {
-	message := GroupClient{
-		Type: "groupActive",
-	}
+// func sendMessageToClientGroup(ws *websocket.Conn) {
+// 	message := GroupClient{
+// 		Type: "groupActive",
+// 	}
 
-	jsonMessage, err := json.Marshal(message)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+// 	jsonMessage, err := json.Marshal(message)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
 
-	err = ws.WriteMessage(websocket.TextMessage, jsonMessage)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-}
+// 	err = ws.WriteMessage(websocket.TextMessage, jsonMessage)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
+// }
 
 func deleteIfMore(db *sql.DB) error {
 	// Step 1: Get row count

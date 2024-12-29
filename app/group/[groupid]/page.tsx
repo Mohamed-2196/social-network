@@ -28,6 +28,9 @@ export interface GroupMessage {
   name: string;
   created_at: string;
   content: string;
+  post_image: string;
+  post_content: string;
+  group_post_id: number;
 }
 
 export interface GroupPostFetch {
@@ -77,7 +80,7 @@ const GroupChatPage = () => {
         console.log(data.messageClient, "WHAT AM I");
         setGroupMessage(data.messageClient);
       } else if (data.type === "groupActive") {
-        fetchGroupPosts();
+        setGroupMessage(data.messageClient);
       }
     });
 
@@ -249,23 +252,53 @@ const GroupChatPage = () => {
                 {/* <GroupBox /> */}
                 {groupMessage?.map((entry) => (
                   <>
-                    <div className="chat chat-start">
-                      <div className="chat-image avatar">
-                        <div className="w-10 rounded-full">
-                          <img
-                            alt="Tailwind CSS chat bubble component"
-                            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                          />
+                    {entry.group_post_id ? (
+                      <>
+                        <div className="chat chat-start">
+                          <div className="chat-image avatar">
+                            <div className="w-10 rounded-full">
+                              <img
+                                alt="Tailwind CSS chat bubble component"
+                                src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                              />
+                            </div>
+                          </div>
+                          <div className="chat-header">
+                            {entry.name}
+                            <time className="text-xs opacity-50">
+                              {entry.created_at}
+                            </time>
+                          </div>
+
+                          <div className="chat-bubble flex">
+                            <div>{entry.post_content}</div>
+                            <img
+                              src={`${actualUrl}/uploads/${entry.post_image}`}
+                            ></img>
+                          </div>
                         </div>
-                      </div>
-                      <div className="chat-header">
-                        {entry.name}
-                        <time className="text-xs opacity-50">
-                          {entry.created_at}
-                        </time>
-                      </div>
-                      <div className="chat-bubble">{entry.content}</div>
-                    </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="chat chat-start">
+                          <div className="chat-image avatar">
+                            <div className="w-10 rounded-full">
+                              <img
+                                alt="Tailwind CSS chat bubble component"
+                                src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                              />
+                            </div>
+                          </div>
+                          <div className="chat-header">
+                            {entry.name}
+                            <time className="text-xs opacity-50">
+                              {entry.created_at}
+                            </time>
+                          </div>
+                          <div className="chat-bubble">{entry.content}</div>
+                        </div>
+                      </>
+                    )}
                   </>
                 ))}
               </div>

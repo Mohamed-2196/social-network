@@ -21,8 +21,9 @@ type GroupMessage struct {
 	Name        string `json:"name"`
 	CreatedAt   string `json:"created_at"`
 	Content     string `json:"content"`
-	postImage   string `json:"post_image"`
-	postContent string `json:"post_content"`
+	GroupPostID int    `json:"group_post_id"`
+	PostImage   string `json:"post_image"`
+	PostContent string `json:"post_content"`
 }
 
 type MessageClient struct {
@@ -180,6 +181,25 @@ func HandleGroupMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendMessageToClient(ws *websocket.Conn, messages []GroupMessage) {
+	message := MessageClient{
+		Type:          "messagesToClient",
+		MessageClient: messages,
+	}
+
+	jsonMessage, err := json.Marshal(message)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = ws.WriteMessage(websocket.TextMessage, jsonMessage)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}
+
+func sendMessageToClient2(ws *websocket.Conn, messages []GroupMessage) {
 	message := MessageClient{
 		Type:          "messagesToClient",
 		MessageClient: messages,
