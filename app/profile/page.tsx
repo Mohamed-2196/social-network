@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FaLock, FaGlobe, FaUserSecret, FaBirthdayCake } from 'react-icons/fa';
 import Nav from '../components/nav';
 import { Loading } from '../components/loading';
-import { Bug } from '../components/error';
+import  Bug  from '../components/error';
 import Post from '../components/posts'; // Import the Post component
 import { useRouter } from 'next/navigation';
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FaUserPlus, FaUsers, FaCalendarAlt, FaCheck, FaTimes, FaComment } from 'react-icons/fa'; // Added FaComment for messages
 import Nav from '../components/nav';
 import { Loading } from '../components/loading';
-import { Bug } from '../components/error';
+import  Bug  from '../components/error';
 import { useRouter } from 'next/navigation';
 import { useGlobalContext } from '../components/GlobalContext';
 

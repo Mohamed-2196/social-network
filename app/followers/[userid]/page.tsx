@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { FaSearch, FaUserPlus, FaUserCheck } from 'react-icons/fa';
 import Nav from '../../components/nav';
 import { Loading } from '../../components/loading';
-import { Bug } from '../../components/error';
+import  Bug  from '../../components/error';
 
 export default function FollowersPage() {
     const { userid } = useParams();

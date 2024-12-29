@@ -1,11 +1,13 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Nav from "../components/nav";
 import Chatpic from '../components/chatpic';
+import { Loading } from '../components/loading';
 import { useGlobalContext } from '../components/GlobalContext';
 
-const Page = () => {
+const ChatContent = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -126,7 +128,7 @@ const Page = () => {
   return (
     <>
       <div>
-      <Nav isDarkMode={isDarkMode} />
+        <Nav isDarkMode={isDarkMode} />
       </div>
 
       <div className={`flex w-full h-screen ${isDarkMode ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
@@ -206,6 +208,14 @@ const Page = () => {
         </div>
       </div>
     </>
+  );
+};
+
+const Page = () => {
+  return (
+    <Suspense fallback={<Loading />}>
+      <ChatContent />
+    </Suspense>
   );
 };
 
