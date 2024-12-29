@@ -17,10 +17,12 @@ type MessageInput struct {
 }
 
 type GroupMessage struct {
-	SenderID  int    `json:"sender_id"`
-	Name      string `json:"name"`
-	CreatedAt string `json:"created_at"`
-	Content   string `json:"content"`
+	SenderID    int    `json:"sender_id"`
+	Name        string `json:"name"`
+	CreatedAt   string `json:"created_at"`
+	Content     string `json:"content"`
+	postImage   string `json:"post_image"`
+	postContent string `json:"post_content"`
 }
 
 type MessageClient struct {
