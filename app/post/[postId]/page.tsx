@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { FaImage } from "react-icons/fa";
 import { Loading } from '../../components/loading';
-import { useParams, useRouter } from "next/navigation"; // Import useRouter for navigation
+import { useParams, useRouter } from "next/navigation"; 
 import Nav from "../../components/nav";
+import Bug from "../../components/error";
+
 
 export default function PostPage() {
     const { postId } = useParams(); // Extract postId from URL parameters
@@ -13,8 +15,15 @@ export default function PostPage() {
     const [newComment, setNewComment] = useState('');
     const [image, setImage] = useState(null); // State for image file
     const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-    const isDarkMode = localStorage.getItem("darkMode") === "true"; // Example dark mode check
+    const [isDarkMode, setIsDarkMode] = useState(false); // Local state for dark mode
     const router = useRouter(); // Initialize the router
+  const [error, setError] = useState(null);
+
+    useEffect(() => {
+        // Check for dark mode preference in localStorage
+        const darkModePreference = localStorage.getItem("darkMode");
+        setIsDarkMode(darkModePreference === "true");
+    }, []);
 
     useEffect(() => {
         const fetchPostData = async () => {
@@ -32,6 +41,7 @@ export default function PostPage() {
                     setComments(data.comments || []); // Ensure comments is an array
                 } else {
                     console.error('Failed to fetch post data');
+                    setError("error")
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
@@ -72,6 +82,7 @@ export default function PostPage() {
             console.error('Comment submission error:', error);
         }
     };
+    if (error) return <Bug message={"You may not have permission to view this Post!!"} />;
 
     return (
         <>
@@ -105,37 +116,37 @@ export default function PostPage() {
                             <div className="comments mt-4">
                                 <h2 className="text-xl font-semibold">Comments</h2>
                                 <ul>
-    {comments.length > 0 ? (
-        comments.map(comment => (
-            <li key={comment.comment_id} className="border-b py-2 flex items-start">
-                {comment.author_image && (
-                    <img 
-                        src={`${serverUrl}/uploads/${comment.author_image}`} 
-                        alt={`${comment.author_first_name} ${comment.author_last_name}`} 
-                        className="rounded-full w-10 h-10 mr-3" // Adjust size as needed
-                    />
-                )}
-                <div>
-                    <strong 
-                        className="cursor-pointer" 
-                        onClick={() => router.push(`/profilepage/${comment.user_id}`)} // Navigate to comment author profile
-                    >
-                        {comment.author_first_name} {comment.author_last_name}
-                    </strong>: {comment.content}
-                    {comment.image && (
-                        <img 
-                            src={`${serverUrl}/uploads/${comment.image}`} 
-                            alt="Comment Image" 
-                            className="mt-2 w-48 h-auto rounded" 
-                        />
-                    )}
-                </div>
-            </li>
-        ))
-    ) : (
-        <li className="py-2">No comments yet.</li>
-    )}
-</ul>
+                                    {comments.length > 0 ? (
+                                        comments.map(comment => (
+                                            <li key={comment.comment_id} className="border-b py-2 flex items-start">
+                                                {comment.author_image && (
+                                                    <img 
+                                                        src={`${serverUrl}/uploads/${comment.author_image}`} 
+                                                        alt={`${comment.author_first_name} ${comment.author_last_name}`} 
+                                                        className="rounded-full w-10 h-10 mr-3" // Adjust size as needed
+                                                    />
+                                                )}
+                                                <div>
+                                                    <strong 
+                                                        className="cursor-pointer" 
+                                                        onClick={() => router.push(`/profilepage/${comment.user_id}`)} // Navigate to comment author profile
+                                                    >
+                                                        {comment.author_first_name} {comment.author_last_name}
+                                                    </strong>: {comment.content}
+                                                    {comment.image && (
+                                                        <img 
+                                                            src={`${serverUrl}/uploads/${comment.image}`} 
+                                                            alt="Comment Image" 
+                                                            className="mt-2 w-48 h-auto rounded" 
+                                                        />
+                                                    )}
+                                                </div>
+                                            </li>
+                                        ))
+                                    ) : (
+                                        <li className="py-2">No comments yet.</li>
+                                    )}
+                                </ul>
                             </div>
                             <form onSubmit={handleCommentSubmit} className="mt-4">
                                 <textarea
