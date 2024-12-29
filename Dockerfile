@@ -1,5 +1,5 @@
 # Use a more recent Node.js runtime as a parent image
-FROM node:18 AS builder
+FROM node:18-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -16,14 +16,17 @@ COPY . .
 # Build the app for production
 RUN npm run build
 
-# Use a lightweight web server to serve the app
-FROM nginx:alpine
+# Use Node.js alpine image for the final stage
+FROM node:18-alpine
+
+# Set the working directory
+WORKDIR /app
 
 # Copy built assets from the builder stage
-COPY --from=builder /app /usr/share/nginx/html
+COPY --from=builder /app ./
 
 # Expose the port the app runs on
 EXPOSE 3000
 
-# Command to run the nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Command to run the app
+CMD ["npm", "start"]
