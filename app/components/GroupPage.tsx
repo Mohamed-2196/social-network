@@ -33,9 +33,26 @@ const GroupPage = () => {
   };
 
   const requestToJoinGroup = async (groupId: number) => {
-    // Implement the function to request to join a group
-    console.log(`Request to join group with ID: ${groupId}`);
-    // API call to request joining the group can be added here
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_SERVER_URL+"/request/"+groupId, {
+        method: "POST",
+        credentials: "include",
+      });
+    
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Response error:", errorData);
+        throw new Error(errorData.message);
+      }
+    
+      const data = await response.json();
+      console.log("Success:", data);
+    
+      // Refresh the page upon a successful response
+      window.location.reload();
+    } catch (error) {
+      console.error("Network Error:", error);
+    }
   };
 
   useEffect(() => {
@@ -123,7 +140,7 @@ const GroupPage = () => {
                     <div className="avatar">
                       <div className="w-14 rounded-full">
                         <img
-                          src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                          src="https://cdn2.vectorstock.com/i/1000x1000/26/66/profile-icon-member-society-group-avatar-vector-18572666.jpg"
                           alt="Group Avatar"
                         />
                       </div>

@@ -39,15 +39,18 @@ function MakeGroup({
         body: JSON.stringify(groupData),
         credentials: "include",
       });
-
+    
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Response error:", errorData);
         throw new Error(errorData.message);
       }
-
+    
       const data = await response.json();
       console.log("Success:", data);
+    
+      // Refresh the page upon a successful response
+      window.location.reload();
     } catch (error) {
       console.error("Network Error:", error);
     }}

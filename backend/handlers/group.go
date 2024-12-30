@@ -161,3 +161,31 @@ func Sendinviterequest(receiverid int, senderid int, groupid int, sendername str
 		}
 	}
 }
+
+func Sendjoinrequest(receiverid int, senderid int, groupid int, sendername string) {
+	notificationContent := fmt.Sprintf("%s wants to join your group.", sendername)
+	hiddenInfo := fmt.Sprintf("%d", groupid) // Store the relationship ID in hidden info
+	_, err := DB.Exec("INSERT INTO notifications (user_id, type, content, sender_id, hidden_info) VALUES ($1, $2, $3, $4, $5)", receiverid, "groupJoinRequest", notificationContent, senderid, hiddenInfo)
+	if err != nil {
+		fmt.Println("error inserting send invite request of groups", err)
+		return
+	}
+	countQuery := `
+        SELECT COUNT(*) 
+        FROM notifications 
+        WHERE user_id = $1
+    `
+	var count int
+	err = DB.QueryRow(countQuery, receiverid).Scan(&count)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if len(clients[receiverid]) > 0 {
+		for _, client := range clients[receiverid] {
+			sendNotificationCount(client, count)
+			Sendupdatednotification(client, receiverid)
+		}
+	}
+}

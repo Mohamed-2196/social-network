@@ -288,6 +288,34 @@ func manageNotification(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+	case "groupJoinRequest":
+		if request.Action == "accept" {
+			// Update the status of the join request to accepted
+			_, err = DB.Exec("UPDATE group_membership SET status = 'accepted' WHERE group_id = $1 AND user_id = $2", hiddenInfo, senderID)
+			if err != nil {
+				http.Error(w, "Error updating group_membership", http.StatusInternalServerError)
+				return
+			}
+			// Delete the notification after acceptance
+			_, err = DB.Exec("DELETE FROM notifications WHERE id = $1", request.ID)
+			if err != nil {
+				http.Error(w, "Error deleting notification", http.StatusInternalServerError)
+				return
+			}
+		} else if request.Action == "reject" {
+			// Delete the notification after rejection
+			_, err = DB.Exec("DELETE FROM notifications WHERE id = $1", request.ID)
+			if err != nil {
+				http.Error(w, "Error deleting notification", http.StatusInternalServerError)
+				return
+			}
+			// Also delete the pending join request from group_membership
+			_, err = DB.Exec("DELETE FROM group_membership WHERE group_id = $1 AND user_id = $2", hiddenInfo, senderID)
+			if err != nil {
+				http.Error(w, "Error deleting group membership entry", http.StatusInternalServerError)
+				return
+			}
+		}
 	default:
 		http.Error(w, "Unsupported notification type", http.StatusBadRequest)
 		return

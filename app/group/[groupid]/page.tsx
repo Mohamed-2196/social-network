@@ -2,6 +2,7 @@
 import React, { useState, useEffect,useCallback  } from "react";
 import Nav from "../../components/nav";
 import GroupPic from "../../components/groupPic";
+import UserInvitePopup from "../../components/userinvite";
 import { useParams } from "next/navigation";
 import Poll from "../../components/Poll";
 import GroupPost from "../../components/groupPost";
@@ -44,7 +45,7 @@ export interface GroupPostFetch {
 
 const GroupChatPage = () => {
   const [popUpIsVisible, setPopUpIsVisible] = useState(false);
-  const { groupid } = useParams();
+  const { groupid } = useParams<{ groupid: string }>(); // TypeScript type definition
   const { subscribe } = useGlobalContext();
   const [showMessage, setShowMessage] = useState(true);
   const [showGroupPost, setShowGroupPost] = useState(false);
@@ -52,7 +53,6 @@ const GroupChatPage = () => {
   const [groupMessage, setGroupMessage] = useState<GroupMessage[]>([]);
   const [groupPosts, setGroupPosts] = useState<GroupPostFetch[]>([]);
   const [messageSending, setMessageSending] = useState<{ message: string }>({ message: "" });
-
   const actualUrl = process.env.NEXT_PUBLIC_SERVER_URL;
   const serverUrl = `${actualUrl}/groupchat/${groupid}`;
   const serverUrl2 = `${actualUrl}/getGroupMessage/${groupid}`;
@@ -176,6 +176,7 @@ const GroupChatPage = () => {
               <div className="card-body p-4">
                 <h2 className="card-title text-lg font-bold">Members</h2>
               </div>
+              <UserInvitePopup groupId={groupid}/>
             </div>
             <ul className="menu menu-md bg-base-200 rounded-box w-[100%] h-200">
               {groupChatInfo?.users.map((user, index) => (
