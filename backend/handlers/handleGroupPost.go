@@ -104,7 +104,7 @@ func HanldeGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	memberQuery := `
-	SELECT user_id, admin
+	SELECT user_id
 	FROM group_membership
 	WHERE group_id = ?;
 `
@@ -121,10 +121,11 @@ func HanldeGroupPost(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var member Member
-		if err := rows.Scan(&member.UserID, &member.Admin); err != nil {
+		if err := rows.Scan(&member.UserID); err != nil {
 			fmt.Println(err, "5")
 			return
 		}
+		member.Admin=false
 		members = append(members, member)
 	}
 
@@ -142,64 +143,61 @@ func HanldeGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query = `
-		INSERT INTO group_messages (group_id, sender_id, receiver_id, group_post_id, content)
+		INSERT INTO group_messages (group_id, sender_id, group_post_id, content)
 		VALUES (?, ?, ?, ?, ?)
 	`
 
-	for i := range members {
-		uid := members[i].UserID
-		_, err = DB.Exec(query, groupID, userID, uid, lastGroupPostID, "")
+		_, err = DB.Exec(query, groupID, userID, lastGroupPostID, "")
 		if err != nil {
 			fmt.Println(err, "6")
 			return
 		}
-	}
 
-	query = `
-		SELECT 
-			gm.sender_id, 
-			gm.created_at, 
-			gp.content_image, 
-			gp.content_text
-		FROM 
-			group_messages AS gm
-		JOIN 
-			group_post AS gp ON gm.group_post_id = gp.group_post_id
-		WHERE 
-			gp.group_post_id = ?;
-	`
+	// query = `
+	// 	SELECT 
+	// 		gm.sender_id, 
+	// 		gm.created_at, 
+	// 		gp.content_image, 
+	// 		gp.content_text
+	// 	FROM 
+	// 		group_messages AS gm
+	// 	JOIN 
+	// 		group_post AS gp ON gm.group_post_id = gp.group_post_id
+	// 	WHERE 
+	// 		gp.group_post_id = ?;
+	// `
 
-	rows, err = DB.Query(query, lastGroupPostID)
-	if err != nil {
-		log.Fatal("Error executing query:", err)
-	}
-	defer rows.Close()
+	// rows, err = DB.Query(query, lastGroupPostID)
+	// if err != nil {
+	// 	log.Fatal("Error executing query:", err)
+	// }
+	// defer rows.Close()
 
-	var groupMessages []GroupMessage
+	// var groupMessages []GroupMessage
 
-	for rows.Next() {
-		var details GroupMessage
-		err := rows.Scan(&details.SenderID, &details.CreatedAt, &details.PostImage, &details.PostContent)
-		if err != nil {
-			log.Fatal("Error scanning row:", err)
-		}
-		groupMessages = append(groupMessages, details)
-	}
+	// for rows.Next() {
+	// 	var details GroupMessage
+	// 	err := rows.Scan(&details.SenderID, &details.CreatedAt, &details.PostImage, &details.PostContent)
+	// 	if err != nil {
+	// 		log.Fatal("Error scanning row:", err)
+	// 	}
+	// 	groupMessages = append(groupMessages, details)
+	// }
 
-	if err = rows.Err(); err != nil {
-		log.Fatal("Error iterating rows:", err)
-	}
+	// if err = rows.Err(); err != nil {
+	// 	log.Fatal("Error iterating rows:", err)
+	// }
 
-	for i := range groupMessages {
-		groupMessages[i].CreatedAt = time.Now().Format("2006-01-02 15:04:05")
-		groupMessages[i].GroupPostID = lastGroupPostID
-		name, err := getUsernameByID(groupMessages[i].SenderID)
-		if err != nil {
-			fmt.Println(err, "P")
-			return
-		}
-		groupMessages[i].Name = name
-	}
+	// for i := range groupMessages {
+	// 	groupMessages[i].CreatedAt = time.Now().Format("2006-01-02 15:04:05")
+	// 	groupMessages[i].GroupPostID = lastGroupPostID
+	// 	name, err := getUsernameByID(groupMessages[i].SenderID)
+	// 	if err != nil {
+	// 		fmt.Println(err, "P")
+	// 		return
+	// 	}
+	// 	groupMessages[i].Name = name
+	// }
 
 	// for i := range members {
 	// 	uid := members[i].UserID
