@@ -201,37 +201,19 @@ func HanldeGroupPost(w http.ResponseWriter, r *http.Request) {
 		groupMessages[i].Name = name
 	}
 
-	for i := range members {
-		uid := members[i].UserID
-		if len(clients[uid]) > 0 {
-			for _, client := range clients[uid] {
-				sendMessageToClient2(client, groupMessages)
-			}
-		}
-	}
+	// for i := range members {
+	// 	uid := members[i].UserID
+	// 	if len(clients[uid]) > 0 {
+	// 		for _, client := range clients[uid] {
+				// sendMessageToClient(client, groupMessages)
+	// 		}
+	// 	}
+	// }
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "MSG SENT"})
 
 }
-
-// func sendMessageToClientGroup(ws *websocket.Conn) {
-// 	message := GroupClient{
-// 		Type: "groupActive",
-// 	}
-
-// 	jsonMessage, err := json.Marshal(message)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-
-// 	err = ws.WriteMessage(websocket.TextMessage, jsonMessage)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// }
 
 func deleteIfMore(db *sql.DB) error {
 	// Step 1: Get row count

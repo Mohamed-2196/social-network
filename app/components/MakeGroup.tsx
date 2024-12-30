@@ -18,15 +18,11 @@ function MakeGroup({
   const [groupData, setGroupData] = useState<{
     groupTitle: string;
     groupDescription: string;
-    users: string[];
     ids: number[];
-    visibility: string; // Added visibility to track public/private
   }>({
     groupTitle: "",
     groupDescription: "",
-    users: selectedUsers,
     ids: userIDs,
-    visibility: "private", // Default to private
   });
   console.log(groupData, "THAT");
 
@@ -54,30 +50,8 @@ function MakeGroup({
       console.log("Success:", data);
     } catch (error) {
       console.error("Network Error:", error);
-    }
+    }}
 
-    try {
-      console.log("OVER HERE BUDDY");
-
-      const response = await fetch(`${serverUrl}/addMembers`, {
-        method: "POST",
-        body: JSON.stringify(groupData),
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Response error:", errorData);
-        throw new Error(errorData.message);
-      }
-
-      const data = await response.json();
-      console.log("Success:", data);
-      // router.push("/");
-    } catch (error) {
-      console.error("Network Error:", error);
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
@@ -120,36 +94,12 @@ function MakeGroup({
             required
           />
         </div>
-        <div className="flex flex-col items-center mt-4">
-          <p>Group Visibility</p>
-          <div className="flex gap-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="visibility"
-                value="private"
-                checked={groupData.visibility === "private"}
-                onChange={handleInputChange}
-              />
-              <span className="ml-2">Private</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="visibility"
-                value="public"
-                checked={groupData.visibility === "public"}
-                onChange={handleInputChange}
-              />
-              <span className="ml-2">Public</span>
-            </label>
-          </div>
-        </div>
+        
         <div className="flex flex-col items-center mt-4">
           <p>Selected Users</p>
           <ul>
             {selectedUsers.map((user) => (
-              <li key={user}>User ID: {user}</li>
+              <li key={user}>Name: {user}</li>
             ))}
           </ul>
         </div>

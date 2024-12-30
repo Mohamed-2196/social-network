@@ -1,24 +1,23 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect,useCallback  } from "react";
 import Nav from "../../components/nav";
 import GroupPic from "../../components/groupPic";
 import { useParams } from "next/navigation";
 import Poll from "../../components/Poll";
 import GroupPost from "../../components/groupPost";
-import { useState, useEffect } from "react";
 import { useGlobalContext } from "../../components/GlobalContext";
 
 export interface GroupChat {
   groupID: number;
   groupName: string;
   groupDescription: string;
-  groupType: boolean;
   users: Member[];
 }
 
 export interface Member {
   user_id: number;
   admin: boolean;
+  image: string;
   username: string;
   me: boolean;
 }
@@ -45,51 +44,35 @@ export interface GroupPostFetch {
 const GroupChatPage = () => {
   const [popUpIsVisible, setPopUpIsVisible] = useState(false);
   const { groupid } = useParams();
-  // const [allMessages, setAllMessages] = useState("")
-  // const [msg, setMsg] = useState("");
   const { subscribe } = useGlobalContext();
   const [showMessage, setShowMessage] = useState(true);
   const [showGroupPost, setShowGroupPost] = useState(false);
   const [groupChatInfo, setGroupChatInfo] = useState<GroupChat>();
   const [groupMessage, setGroupMessage] = useState<GroupMessage[]>([]);
   const [groupPosts, setGroupPosts] = useState<GroupPostFetch[]>([]);
-
-  // const router = useRouter();
-  const [messageSending, setMessageSending] = useState<{
-    message: string;
-  }>({
-    message: "",
-  });
-
-  const togglePopup = () => {
-    setPopUpIsVisible(!popUpIsVisible);
-  };
-
-  const togglePostPopup = () => {
-    setShowGroupPost(!showGroupPost);
-  };
+  const [messageSending, setMessageSending] = useState<{ message: string }>({ message: "" });
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   const actualUrl = process.env.NEXT_PUBLIC_SERVER_URL;
-  const serverUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}/groupchat/${groupid}`;
-  const serverUrl2 = `${process.env.NEXT_PUBLIC_SERVER_URL}/getGroupMessage/${groupid}`;
+  const serverUrl = `${actualUrl}/groupchat/${groupid}`;
+  const serverUrl2 = `${actualUrl}/getGroupMessage/${groupid}`;
+
+  const handleNewMessage = useCallback((data) => {
+    console.log(data);
+    if (data.type === "new_message") {
+      setGroupMessage(prevMessages => [...prevMessages, data.messageClient]);
+      setUpdateTrigger(prev => prev + 1);
+    }
+  }, []);
 
   useEffect(() => {
-    const unsubscribe = subscribe((data) => {
-      console.log("Anything?", data);
-      if (data.type === "messagesToClient") {
-        console.log(data.messageClient, "WHAT AM I");
-        setGroupMessage(data.messageClient);
-      } else if (data.type === "groupActive") {
-        setGroupMessage(data.messageClient);
-      }
-    });
-
+    const unsubscribe = subscribe(handleNewMessage);
     return () => unsubscribe();
-  }, [subscribe]);
+  }, [subscribe, handleNewMessage]);
 
-  const fetchGroupPosts = async () => {
+  const fetchGroupPosts = useCallback(async () => {
     try {
-      const response = await fetch(`${actualUrl}/getGroupPosts`, {
+      const response = await fetch(`${actualUrl}/getGroupPosts/${groupid}`, {
         method: "POST",
         credentials: "include",
       });
@@ -101,17 +84,17 @@ const GroupChatPage = () => {
     } catch (error) {
       console.error("Error fetching group posts:", error);
     }
-  };
+  }, [actualUrl, groupid]);
+
   useEffect(() => {
     fetchGroupPosts();
-  }, []);
+  }, [fetchGroupPosts]);
 
   useEffect(() => {
     const fetchGroupInfo = async () => {
       try {
         const response = await fetch(serverUrl, {
           method: "POST",
-
           credentials: "include",
         });
         if (!response.ok) {
@@ -120,10 +103,9 @@ const GroupChatPage = () => {
         const data: GroupChat = await response.json();
         setGroupChatInfo(data);
       } catch (err) {
-        console.error(err, "occured");
+        console.error(err, "occurred");
       }
     };
-    fetchGroupInfo();
 
     const getGroupMessages = async () => {
       try {
@@ -137,45 +119,51 @@ const GroupChatPage = () => {
         const data: GroupMessage[] = await response.json();
         setGroupMessage(data);
       } catch (err) {
-        console.error(err, "occured");
+        console.error(err, "occurred");
       }
     };
-    getGroupMessages();
-  }, []);
 
-  useEffect(() => {
-    console.log(groupMessage, "XX");
-  }, [groupMessage]);
+    fetchGroupInfo();
+    getGroupMessages();
+  }, [serverUrl, serverUrl2]);
 
   const handleSendMessage = async () => {
     try {
-      const sendingMessage = await fetch(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/sendGroupMessage/${groupid}`,
-        {
-          method: "POST",
-          body: JSON.stringify(messageSending),
-          credentials: "include",
-        }
-      );
+      const sendingMessage = await fetch(`${actualUrl}/sendGroupMessage/${groupid}`, {
+        method: "POST",
+        body: JSON.stringify(messageSending),
+        credentials: "include",
+      });
       if (!sendingMessage.ok) {
         throw new Error("Failed to send message");
       }
-      const responseData: GroupMessage[] = await sendingMessage.json();
-      setGroupMessage(responseData);
-      console.log(responseData, "FIRST");
+      setGroupMessage(prevMessages => [...prevMessages, {
+        sender_id: groupChatInfo?.users.find(u => u.me)?.user_id || 0,
+        name: groupChatInfo?.users.find(u => u.me)?.username || "",
+        created_at: new Date().toISOString(),
+        content: messageSending.message,
+        post_image: "",
+        post_content: "",
+        group_post_id: 0
+      }]);
+      setUpdateTrigger(prev => prev + 1);
     } catch (err) {
       console.error("Error sending message:", err);
     }
     setMessageSending({ message: "" });
   };
 
-  // console.log(groupChatInfo);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setMessageSending((prev) => ({ ...prev, [name]: value }));
+  };
 
-    // console.log(messageSending, "XX");
+  const togglePopup = () => {
+    setPopUpIsVisible(!popUpIsVisible);
+  };
+
+  const togglePostPopup = () => {
+    setShowGroupPost(!showGroupPost);
   };
 
   return (
@@ -183,7 +171,6 @@ const GroupChatPage = () => {
       <div>
         <Nav />
       </div>
-
       <div className="flex w-full h-screen">
         <div className="w-[30%] p-4 bg-gray-800">
           <div className="chatlist">
@@ -192,47 +179,33 @@ const GroupChatPage = () => {
                 <h2 className="card-title text-lg font-bold">Members</h2>
               </div>
             </div>
-
             <ul className="menu menu-md bg-base-200 rounded-box w-[100%] h-200">
-              {groupChatInfo?.users.map((user) => (
-                <>
-                  <li className="w-[100%]">
-                    <a className="w-full">
-                      <div className="flex w- justify-between">
-                        {" "}
-                        <div className="flex gap-3 items-center">
-                          <GroupPic />
-                          {user.username}
-                        </div>
+              {groupChatInfo?.users.map((user, index) => (
+                <li key={`${user.user_id}-${index}`} className="w-[100%]">
+                  <a className="w-full">
+                    <div className="flex justify-between">
+                      <div className="flex gap-3 items-center">
+                        <GroupPic imgurl={`${actualUrl}/uploads/${user.image}`} />
+                        {user.username}
                       </div>
-                    </a>
-                  </li>
-                </>
+                    </div>
+                  </a>
+                </li>
               ))}
             </ul>
           </div>
         </div>
-
-        {/* Divider */}
-
-        {/* Right Section: 70% */}
         <div className="w-[70%] bg-base-200 p-4 flex flex-col h-full">
           <div className="card bg-base-200 mb-4 border-2 border-gray-300 rounded-lg">
             <div className="flex card-body p-2">
               <h2 className="card-title justify-between text-lg font-bold">
                 {groupChatInfo?.groupName}
                 {showMessage ? (
-                  <button
-                    className="btn btn-outline btn-accent"
-                    onClick={() => setShowMessage(false)}
-                  >
+                  <button className="btn btn-outline btn-accent" onClick={() => setShowMessage(false)}>
                     Posts
                   </button>
                 ) : (
-                  <button
-                    className="btn btn-outline btn-accent"
-                    onClick={() => setShowMessage(true)}
-                  >
+                  <button className="btn btn-outline btn-accent" onClick={() => setShowMessage(true)}>
                     Messages
                   </button>
                 )}
@@ -244,91 +217,71 @@ const GroupChatPage = () => {
               <Poll />
             </div>
           )}
-
           {showMessage ? (
-            <>
-              {" "}
-              <div className="flex-1 overflow-aut">
-                {/* <GroupBox /> */}
-                {groupMessage?.map((entry) => (
-                  <>
-                    {entry.group_post_id ? (
-                      <>
-                        <div className="chat chat-start">
-                          <div className="chat-image avatar">
-                            <div className="w-10 rounded-full">
-                              <img
-                                alt="Tailwind CSS chat bubble component"
-                                src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                              />
-                            </div>
-                          </div>
-                          <div className="chat-header">
-                            {entry.name}
-                            <time className="text-xs opacity-50">
-                              {entry.created_at}
-                            </time>
-                          </div>
-
-                          <div className="chat-bubble flex">
-                            <div>{entry.post_content}</div>
-                            <img
-                              src={`${actualUrl}/uploads/${entry.post_image}`}
-                            ></img>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="chat chat-start">
-                          <div className="chat-image avatar">
-                            <div className="w-10 rounded-full">
-                              <img
-                                alt="Tailwind CSS chat bubble component"
-                                src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                              />
-                            </div>
-                          </div>
-                          <div className="chat-header">
-                            {entry.name}
-                            <time className="text-xs opacity-50">
-                              {entry.created_at}
-                            </time>
-                          </div>
-                          <div className="chat-bubble">{entry.content}</div>
-                        </div>
-                      </>
-                    )}
-                  </>
-                ))}
-              </div>
-            </>
+            <div className="flex-1 overflow-auto">
+              {groupMessage && groupMessage.length > 0 ? (
+                groupMessage.map((entry, index) => (
+                  <div key={`${entry.group_post_id}-${index}`} className="chat chat-start">
+                    <div className="chat-image avatar">
+                      <div className="w-10 rounded-full">
+                        <img
+                          src={`${actualUrl}/uploads/${entry.post_image}`}
+                          alt="User avatar"
+                          width={40}
+                          height={40}
+                        />
+                      </div>
+                    </div>
+                    <div className="chat-header">
+                      {entry.name}
+                      <time className="text-xs opacity-50">{entry.created_at}</time>
+                    </div>
+                    <div className="chat-bubble flex">
+                      {entry.group_post_id ? (
+                        <>
+                          <div>{entry.post_content}</div>
+                          <img
+                            src={`${actualUrl}/uploads/${entry.post_image}`}
+                            alt="Post"
+                            width={100}
+                            height={100}
+                          />
+                        </>
+                      ) : (
+                        <div>{entry.content}</div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div>No messages available.</div>
+              )}
+            </div>
           ) : (
-            <div className="flex-1 overflow-aut">
-              {groupPosts.map((post) => (
-                <>
-                  <div>{post.content_text}</div>
-                </>
-              ))}
+            <div className="flex-1 overflow-auto">
+              {groupPosts && groupPosts.length > 0 ? (
+                groupPosts.map((post, index) => (
+                  <div key={`${post.group_post_id}-${index}`}>{post.content_text}</div>
+                ))
+              ) : (
+                <div>No posts available.</div>
+              )}
             </div>
           )}
-
-          {/* Typing Component */}
           <div className="fixed bottom-0 right-0 w-[70%] p-4 bg-gray-800 text-white mt-auto">
             <div className="flex items-center space-x-4">
               <button onClick={togglePopup} className="btn btn-outline">
-                poll
+                Poll
               </button>
               <button onClick={togglePostPopup} className="btn btn-outline">
                 Post
               </button>
-
               <input
                 type="text"
                 className="w-full p-2 rounded bg-gray-700 text-white"
                 placeholder="Type something..."
-                name="message" // Ensure this matches the key in messageSending
-                value={messageSending.message} // Bind the input to the correct state
+                name="message"
+                value={messageSending.message}
                 onChange={handleInputChange}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -337,13 +290,11 @@ const GroupChatPage = () => {
                   }
                 }}
               />
-
               {showGroupPost && (
                 <div className="mb-4">
                   <GroupPost groupID={groupid} />
                 </div>
               )}
-
               <button className="btn btn-outline" onClick={handleSendMessage}>
                 Send
               </button>
@@ -356,3 +307,4 @@ const GroupChatPage = () => {
 };
 
 export default GroupChatPage;
+           

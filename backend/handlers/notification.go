@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -77,7 +78,9 @@ func notificationnumber(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 			return
 		}
-		users = append(users, user)
+		if user.ID != strconv.Itoa(userID) {
+			users = append(users, user)
+		}
 	}
 
 	// Prepare the response data
@@ -206,14 +209,16 @@ func manageNotification(w http.ResponseWriter, r *http.Request) {
 
 	// Check the notification's details
 	var notificationType string
-	var senderID int // To hold the sender_id from the notification
+	var senderID int      // To hold the sender_id from the notification
+	var hiddenInfo string // To hold the hidden_info from the notification
 	queryCheck := `
-        SELECT type, sender_id FROM notifications 
+        SELECT type, sender_id,hidden_Info FROM notifications 
         WHERE id = $1 AND user_id = $2
     `
-	err = DB.QueryRow(queryCheck, request.ID, userID).Scan(&notificationType, &senderID)
+	err = DB.QueryRow(queryCheck, request.ID, userID).Scan(&notificationType, &senderID, &hiddenInfo)
 	if err != nil {
 		http.Error(w, "Notification not found or access denied", http.StatusNotFound)
+		fmt.Println(err)
 		return
 	}
 
@@ -256,7 +261,33 @@ func manageNotification(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, "Error deleting notification", http.StatusInternalServerError)
 		}
-
+	case "groupInvitation":
+		if request.Action == "accept" {
+			// Update the status of the follow request to accepted
+			_, err = DB.Exec("UPDATE group_membership SET status = 'accepted' WHERE group_id = $1 AND user_id = $2", hiddenInfo, userID)
+			if err != nil {
+				http.Error(w, "Error group_membership", http.StatusInternalServerError)
+				return
+			}
+			// Delete the notification after acceptance
+			_, err = DB.Exec("DELETE FROM notifications WHERE id = $1", request.ID)
+			if err != nil {
+				http.Error(w, "Error deleting notification", http.StatusInternalServerError)
+				return
+			}
+		} else if request.Action == "reject" {
+			// Delete the notification after rejection
+			_, err = DB.Exec("DELETE FROM notifications WHERE id = $1", request.ID)
+			if err != nil {
+				http.Error(w, "Error deleting notification", http.StatusInternalServerError)
+				return
+			}
+			_, err = DB.Exec("DELETE FROM group_membership WHERE group_id = $1 AND user_id = $2", hiddenInfo, userID)
+			if err != nil {
+				http.Error(w, "Error deleting notification", http.StatusInternalServerError)
+				return
+			}
+		}
 	default:
 		http.Error(w, "Unsupported notification type", http.StatusBadRequest)
 		return

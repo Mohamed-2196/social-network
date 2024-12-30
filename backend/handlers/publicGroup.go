@@ -4,24 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 )
 
 type PublicGroup struct {
-	GroupID     int       `json:"group_id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	Type        bool      `json:"type"`
+	GroupID     int    `json:"group_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func HandlePublicGroup(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
 
 	c, err := r.Cookie("session_token")
 	if err != nil {
@@ -44,20 +36,21 @@ func HandlePublicGroup(w http.ResponseWriter, r *http.Request) {
 
 	userID := session.id
 	query := `
-    SELECT g.group_id, g.name, g.description, g.created_at, g.type
-FROM groups g
-WHERE g.type = 0 
-AND NOT EXISTS (
-    SELECT 1 
-    FROM group_membership gm 
-    WHERE gm.group_id = g.group_id 
-    AND gm.user_id = ?
-);
-`
+	SELECT g.group_id, g.title, g.description
+	FROM groups g
+	WHERE NOT EXISTS (
+		SELECT 1 
+		FROM group_membership gm 
+		WHERE gm.group_id = g.group_id 
+		AND gm.user_id = ?
+		AND gm.status IN ('accepted', 'pending')
+	);
+	`
 
 	rows, err := DB.Query(query, userID)
 	if err != nil {
 		http.Error(w, "Query execution failed", http.StatusInternalServerError)
+		fmt.Println(err)
 		return
 	}
 	defer rows.Close()
@@ -66,8 +59,10 @@ AND NOT EXISTS (
 
 	for rows.Next() {
 		var group PublicGroup
-		if err := rows.Scan(&group.GroupID, &group.Name, &group.Description, &group.CreatedAt, &group.Type); err != nil {
+		if err := rows.Scan(&group.GroupID, &group.Name, &group.Description); err != nil {
 			http.Error(w, "Error scanning rows", http.StatusInternalServerError)
+			fmt.Println(err)
+
 			return
 		}
 		groups = append(groups, group)

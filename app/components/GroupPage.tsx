@@ -3,16 +3,15 @@ import React, { useEffect, useState } from "react";
 import Nav from "../components/nav";
 import NewGroup from "../components/NewGroup";
 import MakeGroup from "../components/MakeGroup";
-
+import { useRouter } from 'next/navigation';
 export interface Group {
   group_id: number;
   name: string;
   description: string;
-  created_at: string;
-  type: boolean;
 }
 
 const GroupPage = () => {
+  const router = useRouter(); // Initialize useRouter
   const [newGroupPopup, setNewGroupPopup] = useState(false);
   const [makeGroupPopup, setMakeGroupPopup] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -33,6 +32,12 @@ const GroupPage = () => {
     setMakeGroupPopup(true);
   };
 
+  const requestToJoinGroup = async (groupId: number) => {
+    // Implement the function to request to join a group
+    console.log(`Request to join group with ID: ${groupId}`);
+    // API call to request joining the group can be added here
+  };
+
   useEffect(() => {
     const fetchGroups = async () => {
       try {
@@ -46,7 +51,7 @@ const GroupPage = () => {
         const data: Group[] = await response.json();
         setPublicGroups(data);
       } catch (err) {
-        console.error(err, "occured");
+        console.error(err, "occurred");
       }
     };
 
@@ -62,7 +67,7 @@ const GroupPage = () => {
         const data: Group[] = await response.json();
         setMyGroupRows(data);
       } catch (err) {
-        console.error(err, "occured");
+        console.error(err, "occurred");
       }
     };
 
@@ -92,7 +97,7 @@ const GroupPage = () => {
               setMyGroup(false);
             }}
           >
-            All Groups
+            Public Groups
           </button>
         </div>
         <div>
@@ -111,10 +116,10 @@ const GroupPage = () => {
             <>
               {publicGroups.map((group) => (
                 <div
-                  key={group.group_id} // Add a unique key for each mapped element
-                  className="flex items-center shadow-md justify-between min-h-19 border-solid border-blue-200 border-2"
+                  key={group.group_id}
+                  className="flex flex-col items-start shadow-md justify-between min-h-19 border-solid border-blue-200 border-2 p-4 mb-4"
                 >
-                  <div className="flex items-center ml-2 gap-10">
+                  <div className="flex items-center gap-10 mb-2">
                     <div className="avatar">
                       <div className="w-14 rounded-full">
                         <img
@@ -125,8 +130,12 @@ const GroupPage = () => {
                     </div>
                     <h1 className="text-3xl">{group.name}</h1>
                   </div>
-                  <div className="flex items-center mr-2 gap-10">
-                    <button className="btn btn-outline btn-primary">
+                  <p className="text-gray-700 mb-2">{group.description}</p>
+                  <div className="flex justify-end w-full">
+                    <button
+                      className="btn btn-outline btn-primary"
+                      onClick={() => requestToJoinGroup(group.group_id)}
+                    >
                       Request To Join
                     </button>
                   </div>
@@ -135,9 +144,7 @@ const GroupPage = () => {
             </>
           ) : (
             <div className="text-center mt-10">
-              <h2 className="text-xl text-gray-500">
-                No public groups available.
-              </h2>
+              <h2 className="text-xl text-gray-500">No public groups available.</h2>
             </div>
           )}
         </>
@@ -149,22 +156,26 @@ const GroupPage = () => {
             <>
               {myGroupRows.map((group) => (
                 <div
-                  key={group.group_id} // Add a unique key for each mapped element
-                  className="flex items-center shadow-md justify-between min-h-19 border-solid border-blue-200 border-2"
+                  key={group.group_id}
+                  className="flex flex-col items-start shadow-md justify-between min-h-19 border-solid border-blue-200 border-2 p-4 mb-4"
                 >
-                  <div className="flex items-center ml-2 gap-10">
+                  <div className="flex items-center gap-10 mb-2">
                     <div className="avatar">
                       <div className="w-14 rounded-full">
                         <img
-                          src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                          src="https://cdn2.vectorstock.com/i/1000x1000/26/66/profile-icon-member-society-group-avatar-vector-18572666.jpg"
                           alt="Group Avatar"
                         />
                       </div>
                     </div>
                     <h1 className="text-3xl">{group.name}</h1>
                   </div>
-                  <div className="flex items-center mr-2 gap-10">
-                    <button className="btn btn-outline btn-primary">
+                  <p className="text-gray-700 mb-2">{group.description}</p>
+                  <div className="flex justify-end w-full">
+                    <button
+                      className="btn btn-outline btn-primary"
+                      onClick={() => router.push(`/group/${group.group_id}`)}
+                    >
                       Enter
                     </button>
                   </div>
@@ -173,9 +184,7 @@ const GroupPage = () => {
             </>
           ) : (
             <div className="text-center mt-10">
-              <h2 className="text-xl text-gray-500">
-                No public groups available.
-              </h2>
+              <h2 className="text-xl text-gray-500">No my groups available.</h2>
             </div>
           )}
         </>

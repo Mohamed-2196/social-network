@@ -36,11 +36,12 @@ func HandleMyGroups(w http.ResponseWriter, r *http.Request) {
 	userID := session.id
 	// g.group_id, g.name, g.description, g.created_at, g.type
 	query := `
-	SELECT g.group_id, g.name, g.description, g.created_at, g.type
+	SELECT g.group_id, g.title, g.description
 	FROM groups g
 	INNER JOIN group_membership gm ON g.group_id = gm.group_id
 	WHERE gm.user_id = $1
-	ORDER BY g.created_at DESC;`
+	AND gm.status = 'accepted'
+	`
 
 	rows, err := DB.Query(query, userID)
 	if err != nil {
@@ -53,7 +54,7 @@ func HandleMyGroups(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var group PublicGroup
-		if err := rows.Scan(&group.GroupID, &group.Name, &group.Description, &group.CreatedAt, &group.Type); err != nil {
+		if err := rows.Scan(&group.GroupID, &group.Name, &group.Description); err != nil {
 			http.Error(w, "Error scanning rows", http.StatusInternalServerError)
 			return
 		}

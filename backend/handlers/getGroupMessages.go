@@ -2,17 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 )
 
 func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
-	fmt.Println("ENTER MESSAGING ")
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -22,7 +20,6 @@ func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == http.ErrNoCookie {
 			http.Error(w, "No active session", http.StatusUnauthorized)
-			fmt.Println(err, "1")
 			return
 		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -32,11 +29,8 @@ func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
 	session, ok := sessions[sessionToken]
 	if !ok {
 		http.Error(w, "Invalid session", http.StatusUnauthorized)
-		fmt.Println(err, "2")
 		return
 	}
-
-	deleteMessagesIfRowCountIs20(DB)
 
 	vars := mux.Vars(r)
 	groupIDStr := vars["groupid"]
@@ -45,91 +39,96 @@ func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
 	groupID, err := strconv.Atoi(groupIDStr)
 	if err != nil {
 		http.Error(w, "Invalid groupid", http.StatusBadRequest)
-		fmt.Println(err, "3")
 		return
 	}
 
 	userID := session.id
-	// myName, err := getUsernameByID(userID)
+	var membershipCount int
+	membershipQuery := `SELECT COUNT(*) FROM group_membership WHERE group_id = ? AND user_id = ? AND status = 'accepted'`
+	err = DB.QueryRow(membershipQuery, groupID, userID).Scan(&membershipCount)
 	if err != nil {
-		fmt.Println(err, "getting username")
+		log.Println("Error checking group membership:", err)
+		http.Error(w, "Error checking group membership", http.StatusInternalServerError)
 		return
 	}
 
-	memberQuery := `
-	SELECT user_id, admin
-	FROM group_membership
-	WHERE group_id = ?;
-`
+	if membershipCount == 0 {
+		http.Error(w, "User is not a member of the group", http.StatusForbidden)
+		return
+	}
 
+	var groupInfo groupChat
+	groupQuery := `SELECT group_id, title, description, admin_id FROM groups WHERE group_id = ?;`
+	var adminUserID int
+	err = DB.QueryRow(groupQuery, groupID).Scan(&groupInfo.GroupID, &groupInfo.Name, &groupInfo.Description, &adminUserID)
+	if err != nil {
+		log.Println("Error fetching group info:", err)
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	}
+
+	// Fetch accepted members
+	memberQuery := `SELECT user_id FROM group_membership WHERE group_id = ? AND status = 'accepted';`
 	rows, err := DB.Query(memberQuery, groupID)
 	if err != nil {
-		fmt.Println(err, "4")
+		log.Println("Error fetching group members:", err)
+		http.Error(w, "Error fetching group members", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	// Iterate through members and add them to the group
 	var members []Member
-
 	for rows.Next() {
 		var member Member
-		if err := rows.Scan(&member.UserID, &member.Admin); err != nil {
-			fmt.Println(err, "5")
+		err := rows.Scan(&member.UserID)
+		if err != nil {
+			log.Println("Error scanning member:", err)
+			http.Error(w, "Error processing members", http.StatusInternalServerError)
 			return
 		}
+		member.Admin = (member.UserID == adminUserID)
 		members = append(members, member)
 	}
 
-	query := `SELECT DISTINCT sender_id, content FROM group_messages WHERE group_id = ?`
-	rows, err = DB.Query(query, groupID)
+	// Fetch group messages with user info (nickname and image)
+	messageQuery := `
+		SELECT gm.sender_id, gm.content, gm.created_at, u.nickname, u.image
+		FROM group_messages gm
+		JOIN users u ON gm.sender_id = u.user_id
+		WHERE gm.group_id = ?;
+	`
+	rows, err = DB.Query(messageQuery, groupID)
 	if err != nil {
-		fmt.Println(err, "ERROR")
+		log.Println("Error executing message query:", err)
+		http.Error(w, "Error fetching group messages", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
 	var groupMessages []GroupMessage
-
 	for rows.Next() {
 		var groupMessage GroupMessage
-		if err := rows.Scan(&groupMessage.SenderID, &groupMessage.Content); err != nil {
-			fmt.Println(err, "MORE")
+		err := rows.Scan(&groupMessage.SenderID, &groupMessage.Content, &groupMessage.CreatedAt, &groupMessage.Name, &groupMessage.PostImage)
+		if err != nil {
+			log.Println("Error scanning message:", err)
+			http.Error(w, "Error processing messages", http.StatusInternalServerError)
 			return
 		}
 		groupMessages = append(groupMessages, groupMessage)
 	}
 
-	for i := range groupMessages {
-		groupMessages[i].CreatedAt = time.Now().Format("2006-01-02 15:04:05")
-		name, err := getUsernameByID(groupMessages[i].SenderID)
-		if err != nil {
-			fmt.Println(err, "P")
-			return
-		}
-		groupMessages[i].Name = name
-	}
-
 	if err := rows.Err(); err != nil {
-		fmt.Println(err, "MOREZ")
+		log.Println("Error after iterating messages:", err)
+		http.Error(w, "Error processing messages", http.StatusInternalServerError)
 		return
 	}
 
-	for i := range members {
-		uid := members[i].UserID
-		if len(clients[uid]) > 0 && uid != userID {
-			for _, client := range clients[uid] {
-				sendMessageToClient(client, groupMessages)
-			}
-		}
-	}
-
-	// fmt.Println(groupMessages)
+	// Set response header and encode group messages
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(groupMessages)
 	if err != nil {
-		fmt.Println("Error encoding GroupMessage:", err)
+		log.Println("Error encoding GroupMessage:", err)
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 		return
 	}
-
 }

@@ -26,11 +26,10 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/publicGroup", HandlePublicGroup).Methods("POST")
 	r.HandleFunc("/myGroups", HandleMyGroups).Methods("POST")
 	r.HandleFunc("/groupchat/{groupid}", HandleGroupChat).Methods("POST")
-	r.HandleFunc("/addMembers", HandleGroupMembers).Methods("POST")
 	r.HandleFunc("/sendGroupMessage/{groupid}", HandleGroupMessage).Methods("POST")
 	r.HandleFunc("/getGroupMessage/{groupid}", HandleGetGroupMessage).Methods("POST")
 	r.HandleFunc("/createGroupPost", HanldeGroupPost).Methods("POST")
-	r.HandleFunc("/getGroupPosts", HandleGetGroupPosts).Methods("POST")
+	r.HandleFunc("/getGroupPosts/{groupid}", HandleGetGroupPosts).Methods("POST")
 	r.HandleFunc("/mutuals", HandleMutuals).Methods("POST")
 
 	//Sockets And Notifications
