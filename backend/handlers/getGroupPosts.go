@@ -10,12 +10,14 @@ import (
 	"github.com/gorilla/mux" // Ensure this is included for router
 )
 
-type GroupPostFetch struct {
-	GroupPostID  int    `json:"group_post_id"`
+type GroupPostResponse struct {
+	GroupPostID  int    `json:"id"`
 	GroupID      int    `json:"group_id"`
-	UserID       int    `json:"user_id"`
-	ContentText  string `json:"content_text"`
-	ContentImage string `json:"content_image"`
+	Content      string `json:"content_text"`
+	Image        string `json:"content_image"`
+	AuthorID     int    `json:"author_id"`
+	AuthorName   string `json:"author_name"`
+	AuthorImage  string `json:"author_image"`
 	CreatedAt    string `json:"created_at"`
 }
 
@@ -64,10 +66,13 @@ func HandleGetGroupPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Now fetch the posts for the group
-	query := `SELECT group_post_id, group_id, user_id, content_text, content_image, created_at 
-              FROM group_post 
-              WHERE group_id = ?`
+	// Now fetch the posts for the group along with author details
+	query := `
+		SELECT gp.group_post_id, gp.group_id, gp.user_id, gp.content_text, 
+		       gp.content_image, gp.created_at, u.nickname, u.image
+		FROM group_post gp
+		JOIN users u ON gp.user_id = u.user_id
+		WHERE gp.group_id = ?`
 
 	rows, err := DB.Query(query, groupID)
 	if err != nil {
@@ -77,17 +82,19 @@ func HandleGetGroupPosts(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var groupPosts []GroupPostFetch
+	var groupPosts []GroupPostResponse
 
 	for rows.Next() {
-		var post GroupPostFetch
+		var post GroupPostResponse
 		err := rows.Scan(
 			&post.GroupPostID,
 			&post.GroupID,
-			&post.UserID,
-			&post.ContentText,
-			&post.ContentImage,
+			&post.AuthorID,
+			&post.Content,
+			&post.Image,
 			&post.CreatedAt,
+			&post.AuthorName,
+			&post.AuthorImage,
 		)
 		if err != nil {
 			log.Fatal("Error scanning row:", err)
@@ -98,7 +105,7 @@ func HandleGetGroupPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(groupPosts)
 	if err != nil {
-		fmt.Println("Error encoding GroupMessage:", err)
+		fmt.Println("Error encoding GroupPosts:", err)
 		return
 	}
 }

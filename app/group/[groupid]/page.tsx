@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import Poll from "../../components/Poll";
 import GroupPost from "../../components/groupPost";
 import { useGlobalContext } from "../../components/GlobalContext";
+import { FaComment } from "react-icons/fa";
 
 export interface GroupChat {
   groupID: number;
@@ -51,7 +52,6 @@ const GroupChatPage = () => {
   const [groupMessage, setGroupMessage] = useState<GroupMessage[]>([]);
   const [groupPosts, setGroupPosts] = useState<GroupPostFetch[]>([]);
   const [messageSending, setMessageSending] = useState<{ message: string }>({ message: "" });
-  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   const actualUrl = process.env.NEXT_PUBLIC_SERVER_URL;
   const serverUrl = `${actualUrl}/groupchat/${groupid}`;
@@ -60,10 +60,18 @@ const GroupChatPage = () => {
   const handleNewMessage = useCallback((data) => {
     console.log(data);
     if (data.type === "new_message") {
-      setGroupMessage(prevMessages => [...prevMessages, data.messageClient]);
-      setUpdateTrigger(prev => prev + 1);
+        if (data.messageClient.group_id == groupid) {
+          console.log("New message")
+            setGroupMessage(prevMessages => [...prevMessages, data.messageClient]);
+        }
+    } else if (data.type == "new_post") {
+      if (data.postMessage.group_id == groupid) {
+        console.log("New message")
+        setGroupPosts(prevPosts => [...prevPosts, data.postMessage]);
+      }
     }
-  }, []);
+}, [groupid]); // Only depend on groupid
+
 
   useEffect(() => {
     const unsubscribe = subscribe(handleNewMessage);
@@ -137,16 +145,6 @@ const GroupChatPage = () => {
       if (!sendingMessage.ok) {
         throw new Error("Failed to send message");
       }
-      setGroupMessage(prevMessages => [...prevMessages, {
-        sender_id: groupChatInfo?.users.find(u => u.me)?.user_id || 0,
-        name: groupChatInfo?.users.find(u => u.me)?.username || "",
-        created_at: new Date().toISOString(),
-        content: messageSending.message,
-        post_image: "",
-        post_content: "",
-        group_post_id: 0
-      }]);
-      setUpdateTrigger(prev => prev + 1);
     } catch (err) {
       console.error("Error sending message:", err);
     }
@@ -218,7 +216,7 @@ const GroupChatPage = () => {
             </div>
           )}
           {showMessage ? (
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto mb-16">
               {groupMessage && groupMessage.length > 0 ? (
                 groupMessage.map((entry, index) => (
                   <div key={`${entry.group_post_id}-${index}`} className="chat chat-start">
@@ -258,15 +256,55 @@ const GroupChatPage = () => {
               )}
             </div>
           ) : (
-            <div className="flex-1 overflow-auto">
-              {groupPosts && groupPosts.length > 0 ? (
-                groupPosts.map((post, index) => (
-                  <div key={`${post.group_post_id}-${index}`}>{post.content_text}</div>
-                ))
-              ) : (
-                <div>No posts available.</div>
-              )}
+<div className="flex-1 overflow-auto mb-16">
+  {groupPosts && groupPosts.length > 0 ? (
+    groupPosts.map((post, index) => (
+      <div
+        key={post.id}
+        className={`card shadow-xl  "bg-base-100"}`}
+      >
+        <div className="card-body">
+          <div className="flex items-center gap-2">
+            <div className="avatar">
+              <div className="w-10 rounded-full">
+                <img
+                  src={`${actualUrl}/uploads/${post.author_image}`}
+                  alt={post.author_name }
+                />
+              </div>
             </div>
+            <a
+              href={`/profilepage/${post.author_id}`}
+              className="font-semibold link link-hover"
+            >
+              {post.author_name
+              }
+            </a>
+          </div>
+          <p>{post.content_text}</p>
+          {post.content_image && (
+            <div className="mt-2">
+              <img
+                src={`${actualUrl}/uploads/${post.content_image}`}
+                alt="Post image"
+                className="w-full h-auto max-w-[600px] max-h-[400px] rounded"
+              />
+            </div>
+          )}
+          <div className="mt-2 flex justify-between items-center">
+            <button
+              className="btn btn-ghost btn-sm"
+            >
+              <FaComment />
+            </button>
+          </div>
+        </div>
+      </div>
+    ))
+  ) : (
+    <div>No posts available.</div>
+  )}
+</div>
           )}
           <div className="fixed bottom-0 right-0 w-[70%] p-4 bg-gray-800 text-white mt-auto">
             <div className="flex items-center space-x-4">

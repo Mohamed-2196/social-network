@@ -43,7 +43,7 @@ const GroupPost: React.FC<GroupPostProps> = ({ groupID }) => {
         formDataToSend.append("image", postData.image);
       }
 
-      const response = await fetch(`${serverUrl}/createGroupPost`, {
+      const response = await fetch(`${serverUrl}/createGroupPost/${groupID}`, {
         method: "POST",
         body: formDataToSend,
         credentials: "include",

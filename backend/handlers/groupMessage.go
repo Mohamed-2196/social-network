@@ -29,6 +29,7 @@ type GroupMessage struct {
 type MessageToClient struct {
 	Type          string       `json:"type"`
 	MessageClient GroupMessage `json:"messageClient"`
+	PostMessage GroupPost `json:"postMessage"`
 }
 
 func HandleGroupMessage(w http.ResponseWriter, r *http.Request) {
