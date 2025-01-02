@@ -62,13 +62,13 @@ const GroupChatPage = () => {
     if (data.type === "new_message") {
         if (data.messageClient.group_id == groupid) {
           console.log("New message")
-            setGroupMessage(prevMessages => [...prevMessages, data.messageClient]);
-        }
+          setGroupMessage((prevMessages) => [...(prevMessages || []), data.messageClient]);
+                }
     } else if (data.type == "new_post") {
       if (data.postMessage.group_id == groupid) {
         console.log("New message")
-        setGroupPosts(prevPosts => [...prevPosts, data.postMessage]);
-      }
+        setGroupPosts((prevPosts) => [...(prevPosts || []), data.postMessage]);
+            }
     }
 }, [groupid]); // Only depend on groupid
 
