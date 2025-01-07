@@ -3,7 +3,7 @@ import React, { useState, useEffect,useCallback  } from "react";
 import Nav from "../../components/nav";
 import GroupPic from "../../components/groupPic";
 import UserInvitePopup from "../../components/userinvite";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Poll from "../../components/Poll";
 import GroupPost from "../../components/groupPost";
 import { useGlobalContext } from "../../components/GlobalContext";
@@ -35,7 +35,7 @@ export interface GroupMessage {
 }
 
 export interface GroupPostFetch {
-  group_post_id: number;
+  id: number;
   group_id: number;
   user_id: number;
   content_text: string;
@@ -56,6 +56,7 @@ const GroupChatPage = () => {
   const actualUrl = process.env.NEXT_PUBLIC_SERVER_URL;
   const serverUrl = `${actualUrl}/groupchat/${groupid}`;
   const serverUrl2 = `${actualUrl}/getGroupMessage/${groupid}`;
+  const router = useRouter();
 
   const handleNewMessage = useCallback((data) => {
     console.log(data);
@@ -235,7 +236,7 @@ const GroupChatPage = () => {
                       {entry.name}
                       <time className="text-xs opacity-50">{entry.created_at}</time>
                     </div>
-                    <div className="chat-bubble flex">
+                    <div className="chat-bubble flex" onClick={() => router.push(`/group/post/${entry.group_post_id}`)}>
                       {entry.group_post_id ? (
                         <>
                           <div>{entry.post_content}</div>
@@ -262,7 +263,8 @@ const GroupChatPage = () => {
     groupPosts.map((post, index) => (
       <div
         key={post.id}
-        className={`card shadow-xl  "bg-base-100"}`}
+        className={`card shadow-xl  "bg-base-100"`}
+        onClick={() => router.push(`/group/post/${post.id}`)}
       >
         <div className="card-body">
           <div className="flex items-center gap-2">
