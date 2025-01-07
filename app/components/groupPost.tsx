@@ -102,8 +102,7 @@ const GroupPost: React.FC<GroupPostProps> = ({ groupID }) => {
           type="submit"
           className="btn btn-outline w-11/12 mb-2 btn-secondary"
         >
-          Make Group!
-        </button>
+Create Post!        </button>
       </form>
     </div>
   );

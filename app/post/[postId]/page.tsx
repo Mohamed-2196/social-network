@@ -37,8 +37,8 @@ export default function PostPage() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    setPost(data.post); // Assuming the API returns { post: object }
-                    setComments(data.comments || []); // Ensure comments is an array
+                    setPost(data.post); 
+                    setComments(data.comments || []); 
                 } else {
                     console.error('Failed to fetch post data');
                     setError("error")

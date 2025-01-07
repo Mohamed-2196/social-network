@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS "group_post_comments" (
     "post_id" INT NOT NULL,                           -- Post ID to associate the comment with a specific post
     "user_id" INT NOT NULL,                           -- User ID of the commenter
     "content" TEXT NOT NULL,                          -- Content of the comment
+    "image" TEXT,                                     -- File path or URL of the image (optional)
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp of when the comment was created
     FOREIGN KEY ("group_id") REFERENCES "groups" ("group_id") ON DELETE CASCADE,
     FOREIGN KEY ("post_id") REFERENCES "posts" ("post_id") ON DELETE CASCADE,

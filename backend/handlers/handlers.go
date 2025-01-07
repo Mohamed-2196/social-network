@@ -23,8 +23,8 @@ func AddHandlers(r *mux.Router) {
 
 	//Group Stuff]
 	r.HandleFunc("/group/post/{postid}/comments", HandleAddGroupComment).Methods("POST")
-	r.HandleFunc("/group/post/{postid}/comments", HandleGetGroupComments).Methods("POST")
-	r.HandleFunc("/group/post/{postid}", HandleGetPostDetails).Methods("POST")
+	// r.HandleFunc("/group/post/{postid}/comments", HandleGetGroupComments).Methods("POST")
+	r.HandleFunc("/group/post/{postid}", HandleGetPostDetails).Methods("GET")
 	r.HandleFunc("/group", HandleGroup).Methods("POST")
 	r.HandleFunc("/publicGroup", HandlePublicGroup).Methods("POST")
 	r.HandleFunc("/myGroups", HandleMyGroups).Methods("POST")

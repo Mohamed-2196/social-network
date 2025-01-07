@@ -7,13 +7,12 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 )
 
 // PostComment represents a comment structure
-type PostComment struct {
+type GroupPostComment struct {
 	CommentID   int    `json:"comment_id"`
 	UserID      int    `json:"user_id"`
 	GroupID     int    `json:"group_id"`
@@ -22,6 +21,7 @@ type PostComment struct {
 	AuthorName  string `json:"author_name"`
 	AuthorImage string `json:"author_image"`
 	CreatedAt   string `json:"created_at"`
+	Image           string `json:"image,omitempty"`   // Comment author's image
 }
 
 func HandleGetPostDetails(w http.ResponseWriter, r *http.Request) {
@@ -30,24 +30,26 @@ func HandleGetPostDetails(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
-	// postIDStr := r.URL.Query().Get("post_id")
-	// postID, err := strconv.Atoi(postIDStr)
-	// if err != nil {
-	// 	http.Error(w, "Invalid post_id", http.StatusBadRequest)
-	// 	return
-	// }
-
 	vars := mux.Vars(r)
 	postIDStr := vars["postid"]
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+		sendErrorResponse(w, "Session not found", http.StatusUnauthorized)
+		return
+	}
 
-	// Convert groupid to an integer
+	session := sessions[cookie.Value]
+	requesterID := session.id
+
+	// Convert postid to an integer
 	postID, err := strconv.Atoi(postIDStr)
 	if err != nil {
-		http.Error(w, "Invalid groupid", http.StatusBadRequest)
+		http.Error(w, "Invalid postid", http.StatusBadRequest)
 		return
 	}
 	fmt.Println("Hello22")
 
+	// Fetch the post details
 	var post GroupPost
 	query := `
 	SELECT group_post_id, group_id, user_id, content_text, content_image
@@ -60,6 +62,28 @@ func HandleGetPostDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the requester is a member of the group and has an "accepted" status
+	var status string
+	query = `
+	SELECT status 
+	FROM group_membership 
+	WHERE group_id = ? AND user_id = ?`
+	err = DB.QueryRow(query, post.GroupID, requesterID).Scan(&status)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			sendErrorResponse(w, "You are not a member of this group", http.StatusUnauthorized)
+			return
+		}
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if status != "accepted" {
+		sendErrorResponse(w, "Your membership is not accepted yet", http.StatusUnauthorized)
+		return
+	}
+
+	// Fetch the author's details
 	queryUser := `SELECT image, nickname FROM users WHERE user_id = ?`
 	err = DB.QueryRow(queryUser, post.AuthorID).Scan(&post.AuthorImage, &post.AuthorName)
 	if err != nil {
@@ -72,11 +96,10 @@ func HandleGetPostDetails(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Hello3")
 
 	// Fetch comments for the post
-
-	comments := []PostComment{}
+	comments := []GroupPostComment{}
 	query = `
-	SELECT c.comment_id, c.user_id, c.content, u.nickname, u.image, c.created_at
-	FROM comments c
+	SELECT c.comment_id, c.user_id, c.content, c.image, u.nickname, u.image, c.created_at
+	FROM group_post_comments c
 	JOIN users u ON c.user_id = u.user_id
 	WHERE c.post_id = ?
 	ORDER BY c.created_at ASC`
@@ -89,8 +112,16 @@ func HandleGetPostDetails(w http.ResponseWriter, r *http.Request) {
 
 	defer rows.Close()
 	for rows.Next() {
-		var comment PostComment
-		if err := rows.Scan(&comment.CommentID, &comment.UserID, &comment.Content, &comment.AuthorName, &comment.AuthorImage, &comment.CreatedAt); err == nil {
+		var comment GroupPostComment
+		if err := rows.Scan(
+			&comment.CommentID,
+			&comment.UserID,
+			&comment.Content,
+			&comment.Image, 
+			&comment.AuthorName,
+			&comment.AuthorImage,
+			&comment.CreatedAt,
+		); err == nil {
 			comments = append(comments, comment)
 		}
 	}
@@ -106,140 +137,114 @@ func HandleGetPostDetails(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleAddComment(w http.ResponseWriter, r *http.Request) {
-	enableCORS(w, r)
-	w.Header().Set("Content-Type", "application/json")
-
-	userID, err := getUserIDFromSession(r)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	postIDStr := r.FormValue("postId")
-	postID, err := strconv.Atoi(postIDStr)
-	if err != nil {
-		http.Error(w, "Invalid post_id", http.StatusBadRequest)
-		return
-	}
-
-	content := r.FormValue("content")
-	if content == "" {
-		http.Error(w, "Content cannot be empty", http.StatusBadRequest)
-		return
-	}
-
-	query := `
-        INSERT INTO comments (post_id, user_id, content, created_at)
-        VALUES (?, ?, ?, ?)
-    `
-	now := time.Now().Format("2006-01-02 15:04:05")
-	_, err = DB.Exec(query, postID, userID, content, now)
-	if err != nil {
-		http.Error(w, "Failed to add comment", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Comment added successfully"})
-}
-
-func submitComment(w http.ResponseWriter, r *http.Request) {
-	enableCORS(w, r)
-	var comment PostComment // Define your Comment struct
-	err := json.NewDecoder(r.Body).Decode(&comment)
-	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
-	// Logic to insert the comment into the database
-	// Return success response
-}
-
-// HandleAddGroupComment handles adding a comment to a group post
 func HandleAddGroupComment(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
-	w.Header().Set("Content-Type", "application/json")
+    w.Header().Set("Content-Type", "application/json")
 
-	userID, err := getUserIDFromSession(r)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+    // Extract form data
+    content := r.FormValue("content")
+    postIDStr := r.FormValue("postId") // Ensure this matches your frontend input
+    var imageFilename string
 
-	// Decode the request body to get postId and content
-	var requestBody struct {
-		PostID  int    `json:"postId"`  // Post ID to associate the comment with
-		Content string `json:"content"` // Content of the comment
-	}
+    // Handle image upload (if provided)
+    file, handler, err := r.FormFile("image")
+    if err == nil {
+        defer file.Close()
+        imageFilename, err = saveFile(file, handler)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            fmt.Println(err)
+            return
+        }
+    }
 
-	err = json.NewDecoder(r.Body).Decode(&requestBody)
-	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
+    // Retrieve user ID from session
+    cookie, err := r.Cookie("session_token")
+    if err != nil {
+        sendErrorResponse(w, "Session not found", http.StatusUnauthorized)
+        return
+    }
 
-	// Validate the content
-	if requestBody.Content == "" {
-		http.Error(w, "Content cannot be empty", http.StatusBadRequest)
-		return
-	}
+    session := sessions[cookie.Value]
+    userID := session.id
 
-	// Insert the comment into the group_post_comments table
-	query := `
-		INSERT INTO group_post_comments (group_id, post_id, user_id, content, created_at)
-		VALUES (?, ?, ?, ?, ?)
-	`
-	now := time.Now().Format("2006-01-02 15:04:05")
-	_, err = DB.Exec(query /* group_id */, 1, requestBody.PostID, userID, requestBody.Content, now) // Replace 1 with the actual group_id if needed
-	if err != nil {
-		http.Error(w, "Failed to add comment", http.StatusInternalServerError)
-		return
-	}
+    // Validate post ID
+    postID, err := strconv.Atoi(postIDStr)
+    if err != nil {
+        sendErrorResponse(w, "Invalid post ID", http.StatusBadRequest)
+        return
+    }
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Comment added successfully"})
-}
+    // Fetch the group ID associated with the post
+    var groupID int
+    query := `SELECT group_id FROM group_post WHERE group_post_id = ?`
+    err = DB.QueryRow(query, postID).Scan(&groupID)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            sendErrorResponse(w, "Post not found", http.StatusNotFound)
+            return
+        }
+        sendErrorResponse(w, "Database error", http.StatusInternalServerError)
+        return
+    }
 
-// HandleGetGroupComments retrieves comments for a specific group post
-func HandleGetGroupComments(w http.ResponseWriter, r *http.Request) {
-	enableCORS(w, r)
-	w.Header().Set("Content-Type", "application/json")
+    // Check if the user is a member of the group with "accepted" status
+    var status string
+    query = `SELECT status FROM group_membership WHERE group_id = ? AND user_id = ?`
+    err = DB.QueryRow(query, groupID, userID).Scan(&status)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            sendErrorResponse(w, "You are not a member of this group", http.StatusUnauthorized)
+            return
+        }
+        sendErrorResponse(w, "Database error", http.StatusInternalServerError)
+        return
+    }
 
-	var requestBody struct {
-		PostID int `json:"postId"` // Define a struct to read the postId from the body
-	}
+    if status != "accepted" {
+        sendErrorResponse(w, "Your membership is not accepted yet", http.StatusUnauthorized)
+        return
+    }
 
-	// Decode the request body to get the postId
-	err := json.NewDecoder(r.Body).Decode(&requestBody)
-	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
-		return
-	}
+    // Insert new comment into the database
+    query = `
+        INSERT INTO group_post_comments (group_id, post_id, user_id, content, image) 
+        VALUES (?, ?, ?, ?, ?)
+    `
+    result, err := DB.Exec(query, groupID, postID, userID, content, imageFilename)
+    if err != nil {
+        http.Error(w, "Failed to create comment", http.StatusInternalServerError)
+        return
+    }
 
-	postID := requestBody.PostID // Use the postId from the decoded body
+    // Get the ID of the newly created comment
+    commentID, err := result.LastInsertId()
+    if err != nil {
+        http.Error(w, "Failed to retrieve comment ID", http.StatusInternalServerError)
+        return
+    }
 
-	query := `
-		SELECT c.comment_id, c.user_id, c.content, u.nickname, u.image, c.created_at
-		FROM group_comments c
-		JOIN users u ON c.user_id = u.user_id
-		WHERE c.post_id = ?
-		ORDER BY c.created_at ASC
-	`
-	rows, err := DB.Query(query, postID)
-	if err != nil {
-		http.Error(w, "Failed to fetch comments", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+    // Retrieve the full comment details from the database
+    var comment GroupPostComment
+    selectQuery := `
+        SELECT c.comment_id, c.group_id, c.post_id, c.user_id, c.content, c.image, c.created_at,
+               u.nickname AS author_name, u.image AS author_image
+        FROM group_post_comments c 
+        JOIN users u ON c.user_id = u.user_id
+        WHERE c.comment_id = ?
+    `
+    err = DB.QueryRow(selectQuery, commentID).Scan(
+        &comment.CommentID, &comment.GroupID, &comment.PostID, &comment.UserID, 
+        &comment.Content, &comment.Image, &comment.CreatedAt, 
+        &comment.AuthorName, &comment.AuthorImage,
+    )
+    if err != nil {
+        http.Error(w, "Failed to retrieve comment details", http.StatusInternalServerError)
+        fmt.Println(err)
+        return
+    }
 
-	var comments []PostComment
-	for rows.Next() {
-		var comment PostComment
-		if err := rows.Scan(&comment.CommentID, &comment.UserID, &comment.Content, &comment.AuthorName, &comment.AuthorImage, &comment.CreatedAt); err == nil {
-			comments = append(comments, comment)
-		}
-	}
-
-	json.NewEncoder(w).Encode(comments)
+    // Return the newly created comment as a JSON response
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(comment)
 }
