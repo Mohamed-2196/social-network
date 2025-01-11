@@ -121,6 +121,9 @@ export default function NotificationPage() {
                         router.push(`/chat?userId=${notification.sender_id}`); // Navigate to chat
                       } else if (notification.type === 'followRequest') {
                         handleProfileNavigation(notification.sender_id); // Navigate to profile
+                      } else if (notification.type === 'groupEvent'){
+                        handleDelete(notification.id);
+                        router.push(`/group/${notification.hidden_info}`);
                       }
                     }} // Navigate on click
                   >

@@ -316,6 +316,15 @@ func manageNotification(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+	case "groupEvent":
+		query := `
+        DELETE FROM notifications
+        WHERE user_id = $1 AND sender_id = $2 AND type = 'groupEvent';
+    `
+		_, err := DB.Exec(query, userID, senderID)
+		if err != nil {
+			http.Error(w, "Error deleting notification", http.StatusInternalServerError)
+		}
 	default:
 		http.Error(w, "Unsupported notification type", http.StatusBadRequest)
 		return

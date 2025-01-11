@@ -1,10 +1,9 @@
 "use client";
-import React, { useState, useEffect,useCallback  } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Nav from "../../components/nav";
 import GroupPic from "../../components/groupPic";
 import UserInvitePopup from "../../components/userinvite";
 import { useParams, useRouter } from "next/navigation";
-import Poll from "../../components/Poll";
 import GroupPost from "../../components/groupPost";
 import { useGlobalContext } from "../../components/GlobalContext";
 import { FaComment } from "react-icons/fa";
@@ -29,9 +28,17 @@ export interface GroupMessage {
   name: string;
   created_at: string;
   content: string;
-  post_image: string;
-  post_content: string;
-  group_post_id: number;
+  Poll_id : number;
+  poll_title: string;
+  poll_description: string;
+  poll_options: PollOption[];
+}
+
+export interface PollOption {
+  poll_id : number ;
+  option_id: number;
+  content: string;
+  //add votes later
 }
 
 export interface GroupPostFetch {
@@ -45,7 +52,7 @@ export interface GroupPostFetch {
 
 const GroupChatPage = () => {
   const [popUpIsVisible, setPopUpIsVisible] = useState(false);
-  const { groupid } = useParams<{ groupid: string }>(); // TypeScript type definition
+  const { groupid } = useParams<{ groupid: string }>();
   const { subscribe } = useGlobalContext();
   const [showMessage, setShowMessage] = useState(true);
   const [showGroupPost, setShowGroupPost] = useState(false);
@@ -57,22 +64,51 @@ const GroupChatPage = () => {
   const serverUrl = `${actualUrl}/groupchat/${groupid}`;
   const serverUrl2 = `${actualUrl}/getGroupMessage/${groupid}`;
   const router = useRouter();
+  const [createOption, setCreateOption] = useState(false);
+  const [options, setOptions] = useState<string[]>([]);
+  const [item, setItem] = useState('');
+  const [showList, setShowList] = useState(false);
+  const [pollSending, setPollSending] = useState<{
+    pollTopic: string;
+    pollDescription: string;
+    pollOptions: string[];
+  }>({
+    pollTopic: "",
+    pollDescription: "",
+    pollOptions: [],
+  });
 
-  const handleNewMessage = useCallback((data) => {
-    console.log(data);
+  const handleClick = () => {
+    setCreateOption(!createOption);
+    setShowList(false);
+    if (item && !options.includes(item)) {
+      setOptions((prevItems) => [...prevItems, item]);
+      setItem("");
+      setShowList(true);
+      setCreateOption(true);
+    }
+  };
+
+  const handleInputChangee = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPollSending((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleOptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setItem(e.target.value);
+  };
+
+  const handleNewMessage = useCallback((data: any) => {
     if (data.type === "new_message") {
-        if (data.messageClient.group_id == groupid) {
-          console.log("New message")
-          setGroupMessage((prevMessages) => [...(prevMessages || []), data.messageClient]);
-                }
+      if (data.messageClient.group_id == groupid) {
+        setGroupMessage((prevMessages) => [...(prevMessages || []), data.messageClient]);
+      }
     } else if (data.type == "new_post") {
       if (data.postMessage.group_id == groupid) {
-        console.log("New message")
         setGroupPosts((prevPosts) => [...(prevPosts || []), data.postMessage]);
-            }
+      }
     }
-}, [groupid]); // Only depend on groupid
-
+  }, [groupid]);
 
   useEffect(() => {
     const unsubscribe = subscribe(handleNewMessage);
@@ -165,6 +201,35 @@ const GroupChatPage = () => {
     setShowGroupPost(!showGroupPost);
   };
 
+  const handleSendPoll = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const pollTopic = formData.get('pollTopic') as string || '';
+    const pollDescription = formData.get('pollDescription') as string;
+    const pollData = {
+      pollTopic,
+      pollDescription,
+      pollOptions: options,
+    };
+    setPollSending(pollData);
+
+    try {
+      const data = await fetch(`${actualUrl}/sendGroupPoll/${groupid}`, {
+        method: "POST",
+        body: JSON.stringify(pollData),
+        credentials: "include"
+      });
+      if (!data.ok) {
+        throw new Error("Failed to send poll");
+      }
+    } catch (err) {
+      console.error("Error sending poll data", err);
+    }
+    setPollSending({ pollTopic: "", pollDescription: "", pollOptions: [] });
+    setOptions([]);
+    setPopUpIsVisible(false);
+  };
+
   return (
     <>
       <div>
@@ -214,100 +279,141 @@ const GroupChatPage = () => {
           </div>
           {popUpIsVisible && (
             <div className="mb-4">
-              <Poll />
+              <form onSubmit={handleSendPoll} className="w-64 h-full text-white flex-col items-center justify-center rounded-lg shadow-lg p-4">
+                <div>
+                  <input type="text" name="pollTopic" placeholder="Title" className="input input-bordered input-secondary h-8 w-66 max-w-xs text-black mb-2" onChange={handleInputChangee}/>
+                  <input type="text" name="pollDescription" placeholder="Description" className="input input-bordered input-secondary h-10 w-66 max-w-xs text-black" onChange={handleInputChangee}/>
+                </div>
+                <div className="flex items-center mt-2 mb-2">
+                  <div className="text-black font-bold mr-2">Create an option</div>
+                  <button type="button" onClick={handleClick} className="btn btn-xs">+</button>
+                </div>
+                {showList && (
+                  <div className="text-black mt-2">
+                    <ol>
+                      {options.map((option, index) => (
+                        <li key={index}>{option}</li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+                {createOption && (
+                  <div className="flex items-center mt-2">
+                    <input type="text" value={item} onChange={handleOptionChange} placeholder="Type here" className="input input-bordered w-40 h-6 max-w-xs text-black mr-2" />
+                    <button type="button" onClick={handleClick} className="btn btn-xs">+</button>
+                  </div>
+                )}
+                <div className="flex justify-center w-full mt-4">
+                  <button type="submit" className="btn btn-active w-full max-w-xs">Submit</button>
+                </div>
+              </form>
             </div>
           )}
           {showMessage ? (
             <div className="flex-1 overflow-auto mb-16">
-              {groupMessage && groupMessage.length > 0 ? (
-                groupMessage.map((entry, index) => (
-                  <div key={`${entry.group_post_id}-${index}`} className="chat chat-start">
-                    <div className="chat-image avatar">
-                      <div className="w-10 rounded-full">
-                        <img
-                          src={`${actualUrl}/uploads/${entry.post_image}`}
-                          alt="User avatar"
-                          width={40}
-                          height={40}
-                        />
+             {groupMessage && groupMessage.length > 0 ? (
+  groupMessage.map((entry, index) => (
+    <div key={`${entry.group_post_id}-${index}`} className="mb-4">
+      <div className="chat chat-start">
+        <div className="chat-image avatar">
+          <div className="w-10 rounded-full">
+            <img
+              src={`${actualUrl}/uploads/${entry.author_image}`}
+              alt="User avatar"
+              width={40}
+              height={40}
+            />
+          </div>
+        </div>
+        <div className="chat-header">
+          {entry.name}
+          <time className="text-xs opacity-50 ml-2">{entry.created_at}</time>
+        </div>
+        <div className="chat-bubble">
+          {entry.Poll_id ? (
+            <div className="bg-white pt-1 pl-6 pr-6 rounded-lg shadow-lg max-w-md mx-auto h-[200px] w-50">
+            <h2 className="text-2xl font-bold mb-0">{entry.poll_title}</h2>
+            <p className="mb-0">{entry.poll_description}</p>
+            
+            <form id="pollForm" className="flex flex-col justify-end">
+           <div className="space-y-2 mb-2">
+            {entry.poll_options.map((option) => (
+               <label key={option.option_id} className="flex items-center text-sm">
+                <input 
+              type="radio" 
+              name="poll" 
+              value={option.option_id.toString()} 
+              className="radio radio-primary radio-sm" 
+            />
+            <span className="ml-2">{option.content}</span>
+            <span className="ml-auto hidden percentage text-xs">0%</span>
+          </label>
+            ))}
+    </div>
+    
+    <button type="submit" className="btn btn-primary btn-sm">Submit</button>
+  </form>
+          </div>
+          
+          ) : (
+            <div>{entry.content}</div>
+          )}
+        </div>
+      </div>
+    </div>
+  ))
+) : (
+  <div>No messages available.</div>
+)}
+            </div>
+          ) : (
+            <div className="flex-1 overflow-auto mb-16">
+              {groupPosts && groupPosts.length > 0 ? (
+                groupPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="card shadow-xl bg-base-100"
+                    onClick={() => router.push(`/group/post/${post.id}`)}
+                  >
+                    <div className="card-body">
+                      <div className="flex items-center gap-2">
+                        <div className="avatar">
+                          <div className="w-10 rounded-full">
+                            <img
+                              src={`${actualUrl}/uploads/${post.author_image}`}
+                              alt={post.author_name}
+                            />
+                          </div>
+                        </div>
+                        <a
+                          href={`/profilepage/${post.author_id}`}
+                          className="font-semibold link link-hover"
+                        >
+                          {post.author_name}
+                        </a>
                       </div>
-                    </div>
-                    <div className="chat-header">
-                      {entry.name}
-                      <time className="text-xs opacity-50">{entry.created_at}</time>
-                    </div>
-                    <div className="chat-bubble flex" onClick={() => router.push(`/group/post/${entry.group_post_id}`)}>
-                      {entry.group_post_id ? (
-                        <>
-                          <div>{entry.post_content}</div>
+                      <p>{post.content_text}</p>
+                      {post.content_image && (
+                        <div className="mt-2">
                           <img
-                            src={`${actualUrl}/uploads/${entry.post_image}`}
-                            alt="Post"
-                            width={100}
-                            height={100}
+                            src={`${actualUrl}/uploads/${post.content_image}`}
+                            alt="Post image"
+                            className="w-full h-auto max-w-[600px] max-h-[400px] rounded"
                           />
-                        </>
-                      ) : (
-                        <div>{entry.content}</div>
+                        </div>
                       )}
+                      <div className="mt-2 flex justify-between items-center">
+                        <button className="btn btn-ghost btn-sm">
+                          <FaComment />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div>No messages available.</div>
+                <div>No posts available.</div>
               )}
             </div>
-          ) : (
-<div className="flex-1 overflow-auto mb-16">
-  {groupPosts && groupPosts.length > 0 ? (
-    groupPosts.map((post, index) => (
-      <div
-        key={post.id}
-        className={`card shadow-xl  "bg-base-100"`}
-        onClick={() => router.push(`/group/post/${post.id}`)}
-      >
-        <div className="card-body">
-          <div className="flex items-center gap-2">
-            <div className="avatar">
-              <div className="w-10 rounded-full">
-                <img
-                  src={`${actualUrl}/uploads/${post.author_image}`}
-                  alt={post.author_name }
-                />
-              </div>
-            </div>
-            <a
-              href={`/profilepage/${post.author_id}`}
-              className="font-semibold link link-hover"
-            >
-              {post.author_name
-              }
-            </a>
-          </div>
-          <p>{post.content_text}</p>
-          {post.content_image && (
-            <div className="mt-2">
-              <img
-                src={`${actualUrl}/uploads/${post.content_image}`}
-                alt="Post image"
-                className="w-full h-auto max-w-[600px] max-h-[400px] rounded"
-              />
-            </div>
-          )}
-          <div className="mt-2 flex justify-between items-center">
-            <button
-              className="btn btn-ghost btn-sm"
-            >
-              <FaComment />
-            </button>
-          </div>
-        </div>
-      </div>
-    ))
-  ) : (
-    <div>No posts available.</div>
-  )}
-</div>
           )}
           <div className="fixed bottom-0 right-0 w-[70%] p-4 bg-gray-800 text-white mt-auto">
             <div className="flex items-center space-x-4">

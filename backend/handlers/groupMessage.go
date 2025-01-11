@@ -21,9 +21,12 @@ type GroupMessage struct {
 	Name        string `json:"name"`
 	CreatedAt   string `json:"created_at"`
 	Content     string `json:"content"`
-	GroupPostID int    `json:"group_post_id"`
-	PostImage   string `json:"post_image"`
-	PostContent string `json:"post_content"`
+	AuthorImage string `json:"author_image"`
+	PollID  int        `json:"Poll_id"`
+	PollTitle   string `json:"poll_title"`
+	PollDescription string `json:"poll_description"`
+	PollOptions []PollOption `json:"poll_options"`
+	//PollVotes 
 }
 
 type MessageToClient struct {
@@ -73,7 +76,7 @@ func HandleGroupMessage(w http.ResponseWriter, r *http.Request) {
 	newMessage, err := saveGroupMessage(groupID, userID, userMessage.Message)
 	if err != nil {
 		http.Error(w, "Error saving message", http.StatusInternalServerError)
-		fmt.Println(err)
+		fmt.Println("ahem",err)
 		return
 	}
 
@@ -203,8 +206,8 @@ func saveGroupMessage(groupID, userID int, message string) (GroupMessage, error)
 		&newMessage.SenderID,
 		&newMessage.Content,
 		&newMessage.CreatedAt,
-		&newMessage.Name, // Assuming you add these fields to GroupMessage
-		&newMessage.PostImage,     // Assuming you add these fields to GroupMessage
+		&newMessage.Name, // Assuming you add these fields to GroupMessage,   
+		&newMessage.AuthorImage,
 	)
 	if err != nil {
 		return GroupMessage{}, err

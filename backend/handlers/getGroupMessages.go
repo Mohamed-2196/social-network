@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -8,6 +9,18 @@ import (
 
 	"github.com/gorilla/mux"
 )
+
+type Vote struct {
+	VoteID    int `json:"vote_id"`
+	CreatedBy int `json:"created_by"`
+	OptionID  int `json:"option_id"`
+}
+type PollOption struct {
+	PollID   int    `json:"poll_id"`
+	OptionID int    `json:"option_id"`
+	Content  string `json:"content"`
+	Votes    []Vote `json:"votes"`
+}
 
 func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w, r)
@@ -92,7 +105,7 @@ func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch group messages with user info (nickname and image)
 	messageQuery := `
-		SELECT gm.sender_id, gm.content, gm.created_at, u.nickname, u.image
+		SELECT gm.sender_id, gm.content, gm.created_at, u.nickname, u.image , gm.group_post_id
 		FROM group_messages gm
 		JOIN users u ON gm.sender_id = u.user_id
 		WHERE gm.group_id = ?;
@@ -108,11 +121,48 @@ func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
 	var groupMessages []GroupMessage
 	for rows.Next() {
 		var groupMessage GroupMessage
-		err := rows.Scan(&groupMessage.SenderID, &groupMessage.Content, &groupMessage.CreatedAt, &groupMessage.Name, &groupMessage.PostImage)
+		var pollID sql.NullInt64 // Handle null post_id + change the name in db
+		err := rows.Scan(&groupMessage.SenderID, &groupMessage.Content, &groupMessage.CreatedAt, &groupMessage.Name, &groupMessage.AuthorImage, &pollID)
 		if err != nil {
 			log.Println("Error scanning message:", err)
 			http.Error(w, "Error processing messages", http.StatusInternalServerError)
 			return
+		}
+
+		if pollID.Valid {
+			pollQuery := `SELECT title , description FROM group_event WHERE event_id = ?`
+			//add options here
+			err := DB.QueryRow(pollQuery, pollID.Int64).Scan(&groupMessage.PollTitle, &groupMessage.PollDescription)
+			if err != nil {
+				log.Println("Error fetching poll data:", err)
+				http.Error(w, "Error fetching poll data", http.StatusInternalServerError)
+				return
+			}
+
+			optionQuery := `SELECT option_id , content FROM event_option WHERE event_id = ?`
+			optionrow, err := DB.Query(optionQuery, pollID.Int64)
+			if err != nil {
+				log.Println("Error fetching poll data:", err)
+				http.Error(w, "Error fetching poll data", http.StatusInternalServerError)
+				return
+			}
+			defer optionrow.Close()
+			var pollOptions []PollOption
+
+			for optionrow.Next() {
+				var option PollOption
+				err := optionrow.Scan(&option.OptionID, &option.Content)
+				if err != nil {
+					http.Error(w, "Error fetching options", http.StatusInternalServerError)
+				}
+				pollOptions = append(pollOptions, option)
+			}
+			if err := optionrow.Err(); err != nil {
+				log.Println("Error after iterating poll options:", err)
+			}
+
+			groupMessage.PollID = int(pollID.Int64)
+			groupMessage.PollOptions = pollOptions
 		}
 		groupMessages = append(groupMessages, groupMessage)
 	}
