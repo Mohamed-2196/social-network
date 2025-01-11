@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import GroupPost from "../../components/groupPost";
 import { useGlobalContext } from "../../components/GlobalContext";
 import { FaComment } from "react-icons/fa";
+import { PiScrollDuotone } from "react-icons/pi";
 
 export interface GroupChat {
   groupID: number;
@@ -211,8 +212,6 @@ const GroupChatPage = () => {
       pollDescription,
       pollOptions: options,
     };
-    setPollSending(pollData);
-
     try {
       const data = await fetch(`${actualUrl}/sendGroupPoll/${groupid}`, {
         method: "POST",
@@ -225,10 +224,36 @@ const GroupChatPage = () => {
     } catch (err) {
       console.error("Error sending poll data", err);
     }
-    setPollSending({ pollTopic: "", pollDescription: "", pollOptions: [] });
     setOptions([]);
     setPopUpIsVisible(false);
   };
+
+  const handleSendVotes = async (e: React.FormEvent<HTMLFormElement>, entry: any) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const option_id = formData.get('poll');
+    const voteData = {
+      option_id ,
+    }
+  if (!option_id) {
+    alert("Please select an option before submitting.");
+    return;
+  }
+
+  const pollID = entry.Poll_id;
+  try {
+    const data = await fetch(`${actualUrl}/sendPollVote/${pollID}`, {
+      method: "POST",
+      body: JSON.stringify(voteData),
+      credentials: "include"
+    });
+    if (!data.ok) {
+      throw new Error("Failed to send poll");
+    }
+  } catch (err) {
+    console.error("Error sending poll data", err);
+  }
+  }
 
   return (
     <>
@@ -335,7 +360,7 @@ const GroupChatPage = () => {
             <h2 className="text-2xl font-bold mb-0">{entry.poll_title}</h2>
             <p className="mb-0">{entry.poll_description}</p>
             
-            <form id="pollForm" className="flex flex-col justify-end">
+            <form id="pollForm" className="flex flex-col justify-end" onSubmit={(e) => handleSendVotes(e, entry)}>
            <div className="space-y-2 mb-2">
             {entry.poll_options.map((option) => (
                <label key={option.option_id} className="flex items-center text-sm">

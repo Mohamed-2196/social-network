@@ -101,6 +101,9 @@ func saveGroupPoll(groupID, userID int, title string, description string, option
 		&newMessage.PollTitle,
 		&newMessage.PollDescription,
 	)
+	if err != nil {
+		fmt.Println("Error adding data to newMessage", err)
+	}
 
 	if newMessage.PollID != 0 {
 		optionsQuery := `SELECT option_id, content FROM event_option WHERE event_id = ?`

@@ -37,6 +37,7 @@ func AddHandlers(r *mux.Router) {
 	r.HandleFunc("/invite/{groupid}", Inviteothers).Methods("POST")
 	r.HandleFunc("/request/{groupid}", Request).Methods("POST")
 	r.HandleFunc("/sendGroupPoll/{groupid}" , HandleGroupPoll).Methods("POST")
+	r.HandleFunc("/sendPollVote/{pollID}", HandlePolVotes).Methods("POST")
 
 	r.HandleFunc("/mutuals", HandleMutuals).Methods("POST")
 
