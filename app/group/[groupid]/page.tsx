@@ -318,37 +318,84 @@ const GroupChatPage = () => {
             </div>
           </div>
           {popUpIsVisible && (
-            <div className="mb-4">
-              <form onSubmit={handleSendPoll} className="w-64 h-full text-white flex-col items-center justify-center rounded-lg shadow-lg p-4">
-                <div>
-                  <input type="text" name="pollTopic" placeholder="Title" className="input input-bordered input-secondary h-8 w-66 max-w-xs text-black mb-2" onChange={handleInputChangee}/>
-                  <input type="text" name="pollDescription" placeholder="Description" className="input input-bordered input-secondary h-10 w-66 max-w-xs text-black" onChange={handleInputChangee}/>
-                </div>
-                <div className="flex items-center mt-2 mb-2">
-                  <div className="text-black font-bold mr-2">Create an option</div>
-                  <button type="button" onClick={handleClick} className="btn btn-xs">+</button>
-                </div>
-                {showList && (
-                  <div className="text-black mt-2">
-                    <ol>
-                      {options.map((option, index) => (
-                        <li key={index}>{option}</li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-                {createOption && (
-                  <div className="flex items-center mt-2">
-                    <input type="text" value={item} onChange={handleOptionChange} placeholder="Type here" className="input input-bordered w-40 h-6 max-w-xs text-black mr-2" />
-                    <button type="button" onClick={handleClick} className="btn btn-xs">+</button>
-                  </div>
-                )}
-                <div className="flex justify-center w-full mt-4">
-                  <button type="submit" className="btn btn-active w-full max-w-xs">Submit</button>
-                </div>
-              </form>
-            </div>
-          )}
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-slate-800 rounded-lg shadow-xl p-6 w-96 max-w-full relative">
+      <button 
+      onClick={togglePopup}
+        className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors"
+        aria-label="Close"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <form onSubmit={handleSendPoll} className="space-y-4">
+        <h2 className="text-2xl font-bold text-white mb-4">Create a Poll</h2>
+        <div className="space-y-3">
+          <input
+            type="text"
+            name="pollTopic"
+            placeholder="Poll Title"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <textarea
+            name="pollDescription"
+            placeholder="Poll Description"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          ></textarea>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-white font-medium">Poll Options</span>
+          <button
+            type="button"
+            onClick={handleClick}
+            className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
+          >
+            Add Option
+          </button>
+        </div>
+
+        {showList && (
+          <ul className="list-decimal pl-5 space-y-1">
+            {options.map((option, index) => (
+              <li key={index} className="text-white">{option}</li>
+            ))}
+          </ul>
+        )}
+
+        {createOption && (
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={item}
+              onChange={handleOptionChange}
+              placeholder="Enter option"
+              className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              type="button"
+              onClick={handleClick}
+              className="px-3 py-2 bg-blue-500 text-white rounded-md transition duration-300"
+            >
+              Add
+            </button>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
+        >
+          Create Poll
+        </button>
+      </form>
+    </div>
+  </div>
+)}
+
+
           {showMessage ? (
             <div className="flex-1 overflow-auto mb-16">
              {groupMessage && groupMessage.length > 0 ? (
@@ -370,32 +417,36 @@ const GroupChatPage = () => {
           <time className="text-xs opacity-50 ml-2">{entry.created_at}</time>
         </div>
         <div className="chat-bubble">
-          {entry.Poll_id ? (
-            <div className="bg-white pt-1 pl-6 pr-6 rounded-lg shadow-lg max-w-md mx-auto h-[200px] w-50">
-            <h2 className="text-2xl font-bold mb-0">{entry.poll_title}</h2>
-            <p className="mb-0">{entry.poll_description}</p>
-            
-            <form id="pollForm" className="flex flex-col justify-end" onSubmit={(e) => handleSendVotes(e, entry)}>
-           <div className="space-y-2 mb-2">
-            {entry.poll_options.map((option) => (
-               <label key={option.option_id} className="flex items-center text-sm">
-                <input 
-              type="radio" 
-              name="poll" 
-              value={option.option_id.toString()} 
-              className="radio radio-primary radio-sm" 
-            />
-            <span className="ml-2">{option.content}</span>
-            <span className="ml-auto text-xs btn-primary">{option.votes_count}</span>
-          </label>
-            ))}
-    </div>
-    
-    <button type="submit" className="btn btn-primary btn-sm">Submit</button>
-  </form>
-          </div>
-          
-          ) : (
+  {entry.Poll_id ? (
+    <div className="min-w-[200px] min-h-[150px] mb-3">
+      <h4 className="text-base font-semibold mb-1 text-white truncate">{entry.poll_title}</h4>
+      <p className="text-xs mb-2 text-gray-300 line-clamp-2">{entry.poll_description}</p>
+      
+      <form id="pollForm" className="space-y-2" onSubmit={(e) => handleSendVotes(e, entry)}>
+        <div className="space-y-1">
+          {entry.poll_options.map((option) => (
+            <label key={option.option_id} className="flex items-center text-xs bg-slate-600 p-1.5 rounded-md hover:bg-slate-500 transition-colors">
+              <input 
+                type="radio" 
+                name="poll" 
+                value={option.option_id.toString()} 
+                className="form-radio h-3 w-3 text-blue-400 focus:ring-blue-400 border-gray-500"
+              />
+              <span className="ml-2 text-white flex-grow truncate">{option.content}</span>
+              <span className="ml-auto text-[10px] bg-blue-400 text-white px-1 py-0.5 rounded-full">{option.votes_count}</span>
+            </label>
+          ))}
+        </div>
+      
+        <button 
+          type="submit" 
+          className="w-full mb-2 py-1 text-xs bg-blue-400 text-white rounded-md hover:bg-blue-500 transition duration-300"
+        >
+          Vote
+        </button>
+      </form>
+      </div>
+  ) : (
             <div>{entry.content}</div>
           )}
         </div>
