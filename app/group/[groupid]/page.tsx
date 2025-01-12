@@ -101,11 +101,11 @@ const GroupChatPage = () => {
 
   const handleNewMessage = useCallback((data: any) => {
     if (data.type === "new_message") {
-      if (data.messageClient.group_id === groupid) {
+      if (data.messageClient.group_id == groupid) {
         setGroupMessage((prevMessages) => [...(prevMessages || []), data.messageClient]);
       }
     } else if (data.type === "new_post") {
-      if (data.postMessage.group_id === groupid) {
+      if (data.postMessage.group_id == groupid) {
         setGroupPosts((prevPosts) => [...(prevPosts || []), data.postMessage]);
       }
     } else if (data.type === "update_poll") {
