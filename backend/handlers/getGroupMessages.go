@@ -16,10 +16,11 @@ type Vote struct {
 	OptionID  int `json:"option_id"`
 }
 type PollOption struct {
-	PollID   int    `json:"poll_id"`
-	OptionID int    `json:"option_id"`
-	Content  string `json:"content"`
-	Votes    []Vote `json:"votes"`
+	PollID     int    `json:"poll_id"`
+	OptionID   int    `json:"option_id"`
+	Content    string `json:"content"`
+	Votes      []Vote `json:"votes"`
+	VotesCount int    `json:"votes_count"`
 }
 
 func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
@@ -139,24 +140,34 @@ func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			optionQuery := `SELECT option_id , content FROM event_option WHERE event_id = ?`
+			optionQuery := `
+			SELECT eo.option_id, eo.content, COUNT(ov.option_id) AS vote_count
+			FROM event_option eo
+			LEFT JOIN option_vote ov ON eo.option_id = ov.option_id
+			WHERE eo.event_id = ?
+			GROUP BY eo.option_id
+		`
+
 			optionrow, err := DB.Query(optionQuery, pollID.Int64)
 			if err != nil {
-				log.Println("Error fetching poll data:", err)
-				http.Error(w, "Error fetching poll data", http.StatusInternalServerError)
+				log.Println("Error fetching poll options:", err)
+				http.Error(w, "Error fetching poll options", http.StatusInternalServerError)
 				return
 			}
 			defer optionrow.Close()
+
 			var pollOptions []PollOption
 
 			for optionrow.Next() {
 				var option PollOption
-				err := optionrow.Scan(&option.OptionID, &option.Content)
+				err := optionrow.Scan(&option.OptionID, &option.Content, &option.VotesCount) // Scan vote count
 				if err != nil {
 					http.Error(w, "Error fetching options", http.StatusInternalServerError)
+					return
 				}
 				pollOptions = append(pollOptions, option)
 			}
+
 			if err := optionrow.Err(); err != nil {
 				log.Println("Error after iterating poll options:", err)
 			}

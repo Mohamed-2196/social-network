@@ -7,7 +7,6 @@ import { useParams, useRouter } from "next/navigation";
 import GroupPost from "../../components/groupPost";
 import { useGlobalContext } from "../../components/GlobalContext";
 import { FaComment } from "react-icons/fa";
-import { PiScrollDuotone } from "react-icons/pi";
 
 export interface GroupChat {
   groupID: number;
@@ -40,6 +39,7 @@ export interface PollOption {
   option_id: number;
   content: string;
   //add votes later
+  votes_count : number;
 }
 
 export interface GroupPostFetch {
@@ -101,13 +101,26 @@ const GroupChatPage = () => {
 
   const handleNewMessage = useCallback((data: any) => {
     if (data.type === "new_message") {
-      if (data.messageClient.group_id == groupid) {
+      if (data.messageClient.group_id === groupid) {
         setGroupMessage((prevMessages) => [...(prevMessages || []), data.messageClient]);
       }
-    } else if (data.type == "new_post") {
-      if (data.postMessage.group_id == groupid) {
+    } else if (data.type === "new_post") {
+      if (data.postMessage.group_id === groupid) {
         setGroupPosts((prevPosts) => [...(prevPosts || []), data.postMessage]);
       }
+    } else if (data.type === "update_poll") {
+      console.log(data.messageClient)
+      // Update the existing poll with the new information
+      setGroupMessage((prevMessages) => {
+        return (prevMessages || []).map((message) => {
+          if (message.Poll_id === data.messageClient.Poll_id) {  // Match by unique poll ID
+            return {
+              ...data.messageClient,  // Replace with the new poll data
+            };
+          }
+          return message;  // Return the existing message if not updating
+        });
+      });
     }
   }, [groupid]);
 
@@ -155,19 +168,21 @@ const GroupChatPage = () => {
 
     const getGroupMessages = async () => {
       try {
-        const response = await fetch(serverUrl2, {
-          method: "POST",
-          credentials: "include",
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch groups");
-        }
-        const data: GroupMessage[] = await response.json();
-        setGroupMessage(data);
+          const response = await fetch(serverUrl2, {
+              method: "POST",
+              credentials: "include",
+          });
+          if (!response.ok) {
+              throw new Error("Failed to fetch groups");
+          }
+          
+          const data: GroupMessage[] = await response.json();
+          setGroupMessage(data); // Assuming this updates your state
+  
       } catch (err) {
-        console.error(err, "occurred");
+          console.error(err, "occurred");
       }
-    };
+  };
 
     fetchGroupInfo();
     getGroupMessages();
@@ -371,7 +386,7 @@ const GroupChatPage = () => {
               className="radio radio-primary radio-sm" 
             />
             <span className="ml-2">{option.content}</span>
-            <span className="ml-auto hidden percentage text-xs">0%</span>
+            <span className="ml-auto text-xs btn-primary">{option.votes_count}</span>
           </label>
             ))}
     </div>
