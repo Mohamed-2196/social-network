@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 type Vote struct {
@@ -46,8 +44,7 @@ func HandleGetGroupMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	groupIDStr := vars["groupid"]
+	groupIDStr := r.PathValue("groupid")
 
 	// Convert groupid to an integer
 	groupID, err := strconv.Atoi(groupIDStr)

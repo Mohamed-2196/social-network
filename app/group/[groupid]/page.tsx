@@ -69,6 +69,7 @@ const GroupChatPage = () => {
   const [options, setOptions] = useState<string[]>([]);
   const [item, setItem] = useState('');
   const [showList, setShowList] = useState(false);
+  const [pollerr, setPollerr] = useState("");
   const [pollSending, setPollSending] = useState<{
     pollTopic: string;
     pollDescription: string;
@@ -226,8 +227,21 @@ const GroupChatPage = () => {
       pollTopic,
       pollDescription,
       pollOptions: options,
-    };
-    try {
+    }; 
+    if (pollData.pollOptions.length < 2 ) {
+      setPollerr("Please create at least two options for the poll.");
+      return;
+    }
+    if (pollData.pollOptions.length > 9 ) {
+      setPollerr("Please create less than nine options for the poll.");
+      return;
+    }
+    if (pollData.pollDescription == "" || pollData.pollDescription== "" ) {
+      setPollerr("Please write a title and a description.");
+      return;
+    }
+    setPollerr("");
+      try {
       const data = await fetch(`${actualUrl}/sendGroupPoll/${groupid}`, {
         method: "POST",
         body: JSON.stringify(pollData),
@@ -331,7 +345,12 @@ const GroupChatPage = () => {
       </button>
 
       <form onSubmit={handleSendPoll} className="space-y-4">
-        <h2 className="text-2xl font-bold text-white mb-4">Create a Poll</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Create a Poll </h2>
+        {pollerr && (
+          <div className="text-red-500 text-sm">{pollerr}</div>
+        )
+
+        }
         <div className="space-y-3">
           <input
             type="text"

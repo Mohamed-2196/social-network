@@ -4,11 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http" // Import migration package with alias db
-
 	migration "social/db"
 	handlers "social/handlers"
 
-	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -25,14 +23,16 @@ func main() {
 		return
 	}
 	handlers.Migrations()
-	// Set up HTTP routing and handlers, passing db to handlers
-	r := mux.NewRouter()
-	handlers.AddHandlers(r)
-	//handlers.AddHandlers(mux, db)
+	mux := http.NewServeMux()
+	handlers.AddHandlers(mux)
+
+	// Serve static files
 	fs := http.FileServer(http.Dir("./uploads"))
-	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", fs))
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", fs))
+
 	// Start the HTTP server
-	err = http.ListenAndServe(":8080", r)
+	fmt.Println("Server started at :8080")
+	err = http.ListenAndServe(":8080", mux)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}

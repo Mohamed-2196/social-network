@@ -6,19 +6,18 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
-	"github.com/gorilla/mux" // Ensure this is included for router
+	// Ensure this is included for router
 )
 
 type GroupPostResponse struct {
-	GroupPostID  int    `json:"id"`
-	GroupID      int    `json:"group_id"`
-	Content      string `json:"content_text"`
-	Image        string `json:"content_image"`
-	AuthorID     int    `json:"author_id"`
-	AuthorName   string `json:"author_name"`
-	AuthorImage  string `json:"author_image"`
-	CreatedAt    string `json:"created_at"`
+	GroupPostID int    `json:"id"`
+	GroupID     int    `json:"group_id"`
+	Content     string `json:"content_text"`
+	Image       string `json:"content_image"`
+	AuthorID    int    `json:"author_id"`
+	AuthorName  string `json:"author_name"`
+	AuthorImage string `json:"author_image"`
+	CreatedAt   string `json:"created_at"`
 }
 
 func HandleGetGroupPosts(w http.ResponseWriter, r *http.Request) {
@@ -26,9 +25,7 @@ func HandleGetGroupPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Get the group ID from the URL
-	vars := mux.Vars(r)
-	groupIDStr := vars["groupid"]
-
+	groupIDStr := r.PathValue("groupid")
 	groupID, err := strconv.Atoi(groupIDStr)
 	if err != nil {
 		sendErrorResponse(w, "Invalid group ID", http.StatusBadRequest)

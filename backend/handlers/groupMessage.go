@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/gorilla/mux"
 )
 
 type MessageInput struct {
@@ -16,23 +14,23 @@ type MessageInput struct {
 }
 
 type GroupMessage struct {
-	SenderID    int    `json:"sender_id"`
-	GroupID     int    `json:"group_id"`
-	Name        string `json:"name"`
-	CreatedAt   string `json:"created_at"`
-	Content     string `json:"content"`
-	AuthorImage string `json:"author_image"`
-	PollID  int        `json:"Poll_id"`
-	PollTitle   string `json:"poll_title"`
-	PollDescription string `json:"poll_description"`
-	PollOptions []PollOption `json:"poll_options"`
-	//PollVotes 
+	SenderID        int          `json:"sender_id"`
+	GroupID         int          `json:"group_id"`
+	Name            string       `json:"name"`
+	CreatedAt       string       `json:"created_at"`
+	Content         string       `json:"content"`
+	AuthorImage     string       `json:"author_image"`
+	PollID          int          `json:"Poll_id"`
+	PollTitle       string       `json:"poll_title"`
+	PollDescription string       `json:"poll_description"`
+	PollOptions     []PollOption `json:"poll_options"`
+	//PollVotes
 }
 
 type MessageToClient struct {
 	Type          string       `json:"type"`
 	MessageClient GroupMessage `json:"messageClient"`
-	PostMessage GroupPost `json:"postMessage"`
+	PostMessage   GroupPost    `json:"postMessage"`
 }
 
 func HandleGroupMessage(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +74,7 @@ func HandleGroupMessage(w http.ResponseWriter, r *http.Request) {
 	newMessage, err := saveGroupMessage(groupID, userID, userMessage.Message)
 	if err != nil {
 		http.Error(w, "Error saving message", http.StatusInternalServerError)
-		fmt.Println("ahem",err)
+		fmt.Println("ahem", err)
 		return
 	}
 
@@ -114,8 +112,7 @@ func getUserIDFromSession(r *http.Request) (int, error) {
 }
 
 func getGroupIDFromRequest(r *http.Request) (int, error) {
-	vars := mux.Vars(r)
-	groupIDStr := vars["groupid"]
+	groupIDStr := r.PathValue("groupid")
 	return strconv.Atoi(groupIDStr)
 }
 
@@ -206,7 +203,7 @@ func saveGroupMessage(groupID, userID int, message string) (GroupMessage, error)
 		&newMessage.SenderID,
 		&newMessage.Content,
 		&newMessage.CreatedAt,
-		&newMessage.Name, // Assuming you add these fields to GroupMessage,   
+		&newMessage.Name, // Assuming you add these fields to GroupMessage,
 		&newMessage.AuthorImage,
 	)
 	if err != nil {

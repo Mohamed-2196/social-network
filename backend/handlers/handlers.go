@@ -1,69 +1,67 @@
 package handlers
 
 import (
-	"github.com/gorilla/mux"
+	"net/http"
 )
 
-func AddHandlers(r *mux.Router) {
-	//Sign Up Stuff
-	r.HandleFunc("/signup", SignUpHandler).Methods("POST")
-	r.HandleFunc("/signin", SignInHandler).Methods("POST")
-	r.HandleFunc("/logout", SignOutHandler).Methods("POST")
+func AddHandlers(mux *http.ServeMux) {
+	// Sign Up Stuff
+	mux.HandleFunc("POST /signup", SignUpHandler)
+	mux.HandleFunc("POST /signin", SignInHandler)
+	mux.HandleFunc("POST /logout", SignOutHandler)
 
-	//Cookie
-	r.HandleFunc("/cook", Validcookie).Methods("POST")
+	// Cookie
+	mux.HandleFunc("POST /cook", Validcookie)
 
-	//Profile Stuff
-	r.HandleFunc("/profile", UserDataHandler).Methods("POST")
-	r.HandleFunc("/profile/edit", EditProfileHandler).Methods("POST")
-	r.HandleFunc("/likepost", LikePostHandler).Methods("POST")
-	r.HandleFunc("/user/profile", GetUserProfileHandler).Methods("GET")
-	r.HandleFunc("/follow", SendFollowRequestHandler).Methods("POST")
-	r.HandleFunc("/unfollow", SendUnfollowRequestHandler).Methods("POST")
+	// Profile Stuff
+	mux.HandleFunc("POST /profile", UserDataHandler)
+	mux.HandleFunc("POST /profile/edit", EditProfileHandler)
+	mux.HandleFunc("POST /likepost", LikePostHandler)
+	mux.HandleFunc("GET /user/profile", GetUserProfileHandler)
+	mux.HandleFunc("POST /follow", SendFollowRequestHandler)
+	mux.HandleFunc("POST /unfollow", SendUnfollowRequestHandler)
 
-	//Group Stuff]
-	r.HandleFunc("/group/post/{postid}/comments", HandleAddGroupComment).Methods("POST")
-	// r.HandleFunc("/group/post/{postid}/comments", HandleGetGroupComments).Methods("POST")
-	r.HandleFunc("/group/post/{postid}", HandleGetPostDetails).Methods("GET")
-	r.HandleFunc("/group", HandleGroup).Methods("POST")
-	r.HandleFunc("/publicGroup", HandlePublicGroup).Methods("POST")
-	r.HandleFunc("/myGroups", HandleMyGroups).Methods("POST")
-	r.HandleFunc("/groupchat/{groupid}", HandleGroupChat).Methods("POST")
-	r.HandleFunc("/sendGroupMessage/{groupid}", HandleGroupMessage).Methods("POST")
-	r.HandleFunc("/getGroupMessage/{groupid}", HandleGetGroupMessage).Methods("POST")
-	r.HandleFunc("/createGroupPost/{groupID}", HanldeGroupPost).Methods("POST")
-	r.HandleFunc("/getGroupPosts/{groupid}", HandleGetGroupPosts).Methods("POST")
-	r.HandleFunc("/inviteableusers/{groupid}", Invitableusers).Methods("GET")
-	r.HandleFunc("/invite/{groupid}", Inviteothers).Methods("POST")
-	r.HandleFunc("/request/{groupid}", Request).Methods("POST")
-	r.HandleFunc("/sendGroupPoll/{groupid}" , HandleGroupPoll).Methods("POST")
-	r.HandleFunc("/sendPollVote/{pollID}", HandlePolVotes).Methods("POST")
+	// Group Stuff
+	mux.HandleFunc("POST /group/post/{postid}/comments", HandleAddGroupComment)
+	mux.HandleFunc("GET /group/post/{postid}", HandleGetPostDetails)
+	mux.HandleFunc("POST /group", HandleGroup)
+	mux.HandleFunc("POST /publicGroup", HandlePublicGroup)
+	mux.HandleFunc("POST /myGroups", HandleMyGroups)
+	mux.HandleFunc("POST /groupchat/{groupid}", HandleGroupChat)
+	mux.HandleFunc("POST /sendGroupMessage/{groupid}", HandleGroupMessage)
+	mux.HandleFunc("POST /getGroupMessage/{groupid}", HandleGetGroupMessage)
+	mux.HandleFunc("POST /createGroupPost/{groupid}", HanldeGroupPost)
+	mux.HandleFunc("POST /getGroupPosts/{groupid}", HandleGetGroupPosts)
+	mux.HandleFunc("GET /inviteableusers/{groupid}", Invitableusers)
+	mux.HandleFunc("POST /invite/{groupid}", Inviteothers)
+	mux.HandleFunc("POST /request/{groupid}", Request)
+	mux.HandleFunc("POST /sendGroupPoll/{groupid}", HandleGroupPoll)
+	mux.HandleFunc("POST /sendPollVote/{pollID}", HandlePolVotes)
 
-	r.HandleFunc("/mutuals", HandleMutuals).Methods("POST")
+	// Mutuals
+	mux.HandleFunc("POST /mutuals", HandleMutuals)
 
-	//Sockets And Notifications
-	r.HandleFunc("/ws", Ws).Methods("GET")
-	r.HandleFunc("/notificationnum", notificationnumber).Methods("GET")
-	r.HandleFunc("/notifications", getNotifications).Methods("POST")
-	r.HandleFunc("/managenotifications", manageNotification).Methods("POST")
+	// Sockets And Notifications
+	mux.HandleFunc("GET /ws", Ws)
+	mux.HandleFunc("GET /notificationnum", notificationnumber)
+	mux.HandleFunc("POST /notifications", getNotifications)
+	mux.HandleFunc("POST /managenotifications", manageNotification)
 
-	//Post Stuff
-	r.HandleFunc("/createpost", CreatePostHandler).Methods("POST")
-	r.HandleFunc("/createdposts", CreatedPostsHandler).Methods("POST")
-	// r.HandleFunc("/createcomment" , CreateCommentHandler).Methods("POST")
+	// Post Stuff
+	mux.HandleFunc("POST /createpost", CreatePostHandler)
+	mux.HandleFunc("POST /createdposts", CreatedPostsHandler)
 
-	//Temporary Stuff for Testing purposes.
-	r.HandleFunc("/test", TestHandler).Methods("POST")
-	// r.HandleFunc("/getpost", HandlePosts).Methods("POST")
-	r.HandleFunc("/followers", GetFollowersHandler).Methods("GET")
-	r.HandleFunc("/followings", GetFollowingHandler).Methods("GET")
-	r.HandleFunc("/home", HomeHandler).Methods("GET")
-	r.HandleFunc("/post", GetPostAndCommentsHandler).Methods("GET")
-	r.HandleFunc("/comments", CreateCommentHandler).Methods("POST")
+	// Temporary Stuff for Testing purposes
+	mux.HandleFunc("POST /test", TestHandler)
+	mux.HandleFunc("GET /followers", GetFollowersHandler)
+	mux.HandleFunc("GET /followings", GetFollowingHandler)
+	mux.HandleFunc("GET /home", HomeHandler)
+	mux.HandleFunc("GET /post", GetPostAndCommentsHandler)
+	mux.HandleFunc("POST /comments", CreateCommentHandler)
 
-	//chat stuff
-	r.HandleFunc("/chat/info", GetChatInfo).Methods("GET")
-	r.HandleFunc("/chatusers", GetChatUsers).Methods("GET")
-	r.HandleFunc("/messages", GetMessages).Methods("POST")
-	r.HandleFunc("/mnchat", manageNotificationinchat).Methods("POST")
+	// Chat Stuff
+	mux.HandleFunc("GET /chat/info", GetChatInfo)
+	mux.HandleFunc("GET /chatusers", GetChatUsers)
+	mux.HandleFunc("POST /messages", GetMessages)
+	mux.HandleFunc("POST /mnchat", manageNotificationinchat)
 }

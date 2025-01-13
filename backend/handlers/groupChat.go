@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
 type groupChat struct {
@@ -52,8 +50,7 @@ func HandleGroupChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	groupIDStr := vars["groupid"]
+	groupIDStr := r.PathValue("groupid")
 
 	// Convert groupid to an integer
 	groupID, err := strconv.Atoi(groupIDStr)
@@ -169,8 +166,7 @@ func Inviteothers(w http.ResponseWriter, r *http.Request) {
 	requesterID := session.id
 	fmt.Println("Requester ID:", requesterID)
 
-	vars := mux.Vars(r)
-	groupIDStr := vars["groupid"]
+	groupIDStr := r.PathValue("groupid")
 
 	// Convert groupid to an integer
 	groupID, err := strconv.Atoi(groupIDStr)
@@ -301,82 +297,80 @@ func Inviteothers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-
 func Request(w http.ResponseWriter, r *http.Request) {
-    enableCORS(w,r)
+	enableCORS(w, r)
 
-    // Check for session token
-    cookie, err := r.Cookie("session_token")
-    if err != nil {
-        http.Error(w, "Unauthorized", http.StatusUnauthorized)
-        fmt.Println(err)
-        return
-    }
+	// Check for session token
+	cookie, err := r.Cookie("session_token")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		fmt.Println(err)
+		return
+	}
 
-    session := sessions[cookie.Value]
-    requesterID := session.id
-    fmt.Println("Requester ID:", requesterID)
+	session := sessions[cookie.Value]
+	requesterID := session.id
+	fmt.Println("Requester ID:", requesterID)
 
-    vars := mux.Vars(r)
-    groupIDStr := vars["groupid"]
+	groupIDStr := r.PathValue("groupid")
 
-    // Convert groupid to an integer
-    groupID, err := strconv.Atoi(groupIDStr)
-    if err != nil {
-        http.Error(w, "Invalid group ID", http.StatusBadRequest)
-        return
-    }
+	// Convert groupid to an integer
+	groupID, err := strconv.Atoi(groupIDStr)
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
 
-    // Check if requester is already a member of the group
-    var membershipCount int
-    membershipQuery := `SELECT COUNT(*) FROM group_membership 
+	// Check if requester is already a member of the group
+	var membershipCount int
+	membershipQuery := `SELECT COUNT(*) FROM group_membership 
                         WHERE group_id = ? AND user_id = ? AND status = 'accepted'`
-    err = DB.QueryRow(membershipQuery, groupID, requesterID).Scan(&membershipCount)
-    if err != nil {
-        log.Printf("Error checking group membership: %v", err)
-        sendErrorResponse(w, "Error checking group membership", http.StatusInternalServerError)
-        return
-    }
+	err = DB.QueryRow(membershipQuery, groupID, requesterID).Scan(&membershipCount)
+	if err != nil {
+		log.Printf("Error checking group membership: %v", err)
+		sendErrorResponse(w, "Error checking group membership", http.StatusInternalServerError)
+		return
+	}
 
-    if membershipCount > 0 {
-        sendErrorResponse(w, "User is already a member of the group", http.StatusBadRequest)
-        return
-    }
+	if membershipCount > 0 {
+		sendErrorResponse(w, "User is already a member of the group", http.StatusBadRequest)
+		return
+	}
 
-    // Get the admin ID from the groups table
-    var adminID int
-    adminQuery := `SELECT admin_id FROM groups WHERE group_id = ?`
-    err = DB.QueryRow(adminQuery, groupID).Scan(&adminID)
-    if err != nil {
-        log.Printf("Error retrieving admin ID: %v", err)
-        sendErrorResponse(w, "Error retrieving admin ID", http.StatusInternalServerError)
-        return
-    }
+	// Get the admin ID from the groups table
+	var adminID int
+	adminQuery := `SELECT admin_id FROM groups WHERE group_id = ?`
+	err = DB.QueryRow(adminQuery, groupID).Scan(&adminID)
+	if err != nil {
+		log.Printf("Error retrieving admin ID: %v", err)
+		sendErrorResponse(w, "Error retrieving admin ID", http.StatusInternalServerError)
+		return
+	}
 
-    // Insert the requester into the group_membership with status 'pending'
-    insertQuery := `INSERT INTO group_membership (user_id, group_id, status) VALUES (?, ?, 'pending')`
-    _, err = DB.Exec(insertQuery, requesterID, groupID)
-    if err != nil {
-        log.Printf("Error inserting into group_membership: %v", err)
-        sendErrorResponse(w, "Error joining the group", http.StatusInternalServerError)
-        return
-    }
+	// Insert the requester into the group_membership with status 'pending'
+	insertQuery := `INSERT INTO group_membership (user_id, group_id, status) VALUES (?, ?, 'pending')`
+	_, err = DB.Exec(insertQuery, requesterID, groupID)
+	if err != nil {
+		log.Printf("Error inserting into group_membership: %v", err)
+		sendErrorResponse(w, "Error joining the group", http.StatusInternalServerError)
+		return
+	}
 
-    // Send a notification to the admin
-    var requesterName string
-    nameQuery := `SELECT nickname FROM users WHERE user_id = ?`
-    err = DB.QueryRow(nameQuery, requesterID).Scan(&requesterName)
-    if err != nil {
-        log.Printf("Error retrieving requester name: %v", err)
-        sendErrorResponse(w, "Error retrieving requester name", http.StatusInternalServerError)
-        return
-    }
+	// Send a notification to the admin
+	var requesterName string
+	nameQuery := `SELECT nickname FROM users WHERE user_id = ?`
+	err = DB.QueryRow(nameQuery, requesterID).Scan(&requesterName)
+	if err != nil {
+		log.Printf("Error retrieving requester name: %v", err)
+		sendErrorResponse(w, "Error retrieving requester name", http.StatusInternalServerError)
+		return
+	}
 
-    Sendjoinrequest(adminID, requesterID, groupID, requesterName)
+	Sendjoinrequest(adminID, requesterID, groupID, requesterName)
 
-    // Respond with a success message
-    w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(map[string]interface{}{
-        "message": "Request to join the group has been sent.",
-    })
+	// Respond with a success message
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "Request to join the group has been sent.",
+	})
 }

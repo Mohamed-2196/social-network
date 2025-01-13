@@ -7,8 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 type ReceivedVote struct {
@@ -18,9 +16,9 @@ type ReceivedVote struct {
 }
 
 type ExistingVote struct {
-    ID       int
-    UserID   int 
-    OptionID int 
+	ID       int
+	UserID   int
+	OptionID int
 }
 
 func HandlePolVotes(w http.ResponseWriter, r *http.Request) {
@@ -65,59 +63,59 @@ func HandlePolVotes(w http.ResponseWriter, r *http.Request) {
 	vote.PollID = PollID
 	vote.UserID = userID
 	groupID, err := getGroupIDFromPollID(PollID)
-if err != nil {
-    fmt.Println("Error:", err)
-} else {
-    fmt.Printf("Group ID for Poll ID %d: %d\n", PollID, groupID)
-}
+	if err != nil {
+		fmt.Println("Error:", err)
+	} else {
+		fmt.Printf("Group ID for Poll ID %d: %d\n", PollID, groupID)
+	}
 
-newMessage, err := savePollVote(userID, optionID , groupID , PollID)
-if err != nil {
-    fmt.Println("Error:", err)
-    return
-}
-// Create the message to send to clients
-messageToClient := MessageToClient{
-	Type:          "update_poll",
-	MessageClient: newMessage,
-}
+	newMessage, err := savePollVote(userID, optionID, groupID, PollID)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	// Create the message to send to clients
+	messageToClient := MessageToClient{
+		Type:          "update_poll",
+		MessageClient: newMessage,
+	}
 
-members, err := getGroupMembers(groupID)
+	members, err := getGroupMembers(groupID)
 	if err != nil {
 		http.Error(w, "Error fetching group members", http.StatusInternalServerError)
 		return
 	}
 
-// Send the message to all connected clients
-for _, user := range members {
-	if len(clients[user.UserID]) > 0 {
-		for _, client := range clients[user.UserID] {
-			// Send the structured message to the connected client
-			err := client.WriteJSON(messageToClient)
-			if err != nil {
-				log.Printf("Error sending message to user %d: %v", user.UserID, err)
+	// Send the message to all connected clients
+	for _, user := range members {
+		if len(clients[user.UserID]) > 0 {
+			for _, client := range clients[user.UserID] {
+				// Send the structured message to the connected client
+				err := client.WriteJSON(messageToClient)
+				if err != nil {
+					log.Printf("Error sending message to user %d: %v", user.UserID, err)
+				}
 			}
 		}
 	}
-}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "VOTE IS SENT"})
 }
 
 func getPollIDFromRequest(r *http.Request) (int, error) {
-	vars := mux.Vars(r)
-	pollIDStr := vars["pollID"]
+	pollIDStr := r.PathValue("pollID")
+
 	return strconv.Atoi(pollIDStr)
 }
 
 func savePollVote(userID int, optionID int, groupID int, pollID int) (GroupMessage, error) {
-    query := `INSERT INTO option_vote (created_by, option_id) VALUES(?, ?)`
-    _, err := DB.Exec(query, userID, optionID)
-    if err != nil {
-        return GroupMessage{}, fmt.Errorf("failed to save poll in messages: %w", err)
-    }
-   
-    query2 := `SELECT 
+	query := `INSERT INTO option_vote (created_by, option_id) VALUES(?, ?)`
+	_, err := DB.Exec(query, userID, optionID)
+	if err != nil {
+		return GroupMessage{}, fmt.Errorf("failed to save poll in messages: %w", err)
+	}
+
+	query2 := `SELECT 
         gm.sender_id, 
         gm.group_id, 
         gm.content, 
@@ -154,47 +152,47 @@ func savePollVote(userID int, optionID int, groupID int, pollID int) (GroupMessa
         ge.description, 
         eo.option_id, 
         eo.content`
-    
-    rows, err := DB.Query(query2, groupID, pollID) 
-    if err != nil {
-        return GroupMessage{}, err
-    }
-    defer rows.Close()
 
-    var groupMessage GroupMessage
+	rows, err := DB.Query(query2, groupID, pollID)
+	if err != nil {
+		return GroupMessage{}, err
+	}
+	defer rows.Close()
 
-    for rows.Next() {
-        var po PollOption
+	var groupMessage GroupMessage
 
-        err = rows.Scan(
-            &groupMessage.SenderID,
-            &groupMessage.GroupID,
-            &groupMessage.Content,
-            &groupMessage.CreatedAt,
-            &groupMessage.Name,
-            &groupMessage.AuthorImage,
-            &groupMessage.PollID,
-            &groupMessage.PollTitle,
-            &groupMessage.PollDescription,
-            &po.OptionID,
-            &po.Content,
-            &po.VotesCount,
-        )
-        if err != nil {
-            return GroupMessage{}, err
-        }
+	for rows.Next() {
+		var po PollOption
 
-        groupMessage.PollOptions = append(groupMessage.PollOptions, po)
-    }
+		err = rows.Scan(
+			&groupMessage.SenderID,
+			&groupMessage.GroupID,
+			&groupMessage.Content,
+			&groupMessage.CreatedAt,
+			&groupMessage.Name,
+			&groupMessage.AuthorImage,
+			&groupMessage.PollID,
+			&groupMessage.PollTitle,
+			&groupMessage.PollDescription,
+			&po.OptionID,
+			&po.Content,
+			&po.VotesCount,
+		)
+		if err != nil {
+			return GroupMessage{}, err
+		}
 
-    if err = rows.Err(); err != nil {
-        return GroupMessage{}, err
-    }
- 
-    return groupMessage, nil
+		groupMessage.PollOptions = append(groupMessage.PollOptions, po)
+	}
+
+	if err = rows.Err(); err != nil {
+		return GroupMessage{}, err
+	}
+
+	return groupMessage, nil
 }
 
-func findExistingVote(userID int , PollID int) (*ExistingVote, error) {
+func findExistingVote(userID int, PollID int) (*ExistingVote, error) {
 	var vote ExistingVote
 	query := `
         SELECT v.vote_id, v.created_by, v.option_id 
@@ -217,24 +215,24 @@ func findExistingVote(userID int , PollID int) (*ExistingVote, error) {
 
 func deleteVote(voteID int) error {
 	query := `DELETE FROM option_vote WHERE vote_id = ?`
-    
-    result, err := DB.Exec(query, voteID)
-    if err != nil {
-        return err
-    }
 
-    // Check if any rows were affected
-    rowsAffected, err := result.RowsAffected()
-    if err != nil {
-        return err
-    }
-    if rowsAffected == 0 {
-        return sql.ErrNoRows // No rows were found to delete
-    }
+	result, err := DB.Exec(query, voteID)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	// Check if any rows were affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows // No rows were found to delete
+	}
+
+	return nil
 }
- func getGroupIDFromPollID(pollID int)(int, error){
+func getGroupIDFromPollID(pollID int) (int, error) {
 	query := `SELECT 
     gm.group_id
    FROM 
@@ -245,13 +243,13 @@ func deleteVote(voteID int) error {
     ge.event_id = ?`
 
 	var groupID int
-    err := DB.QueryRow(query, pollID).Scan(&groupID)
-    if err != nil {
-        if err == sql.ErrNoRows {
-            return 0, fmt.Errorf("no group found for poll ID %d", pollID)
-        }
-        return 0, fmt.Errorf("error querying group ID: %w", err)
-    }
+	err := DB.QueryRow(query, pollID).Scan(&groupID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, fmt.Errorf("no group found for poll ID %d", pollID)
+		}
+		return 0, fmt.Errorf("error querying group ID: %w", err)
+	}
 
-    return groupID, nil
- }
+	return groupID, nil
+}

@@ -21,6 +21,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const subscribers = useRef<((data: any) => void)[]>([]);
   const reconnectIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -32,11 +33,18 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const connectWebSocket = () => {
+    if (isConnected) return; // Prevent multiple connections
+
     const ws = new WebSocket("ws://localhost:8080/ws");
     setSocket(ws);
 
     ws.onopen = () => {
       console.log("Connected to WebSocket server from global context");
+      setIsConnected(true);
+      if (reconnectIntervalRef.current) {
+        clearInterval(reconnectIntervalRef.current);
+        reconnectIntervalRef.current = null; // Clear the interval once connected
+      }
     };
 
     ws.onerror = (error: Event) => {
@@ -45,6 +53,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
 
     ws.onclose = () => {
       console.log("WebSocket connection closed");
+      setIsConnected(false); // Update connection state
       if (reconnectIntervalRef.current === null) {
         reconnectIntervalRef.current = setInterval(connectWebSocket, 3000);
       }

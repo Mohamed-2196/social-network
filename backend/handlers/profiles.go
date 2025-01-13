@@ -190,7 +190,7 @@ func GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
                    u.last_name AS author_last_name,
                    u.image AS author_image,
                    MAX(CASE WHEN pi.user_id = $1 THEN 1 ELSE 0 END) AS user_liked
-            FROM posts p
+           	 FROM posts p
             JOIN post_interaction pi ON p.post_id = pi.post_id
             JOIN users u ON p.user_id = u.user_id
             WHERE pi.user_id = $2

@@ -1,6 +1,6 @@
 module social
 
-go 1.21
+go 1.23
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.16.2

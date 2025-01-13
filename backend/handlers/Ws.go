@@ -22,15 +22,10 @@ func Ws(w http.ResponseWriter, r *http.Request) {
 			return true
 		},
 	}
-
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		fmt.Println("Error upgrading connection:", err)
-		return
-	}
-	defer conn.Close()
-
 	c, err := r.Cookie("session_token")
+	sessionToken := c.Value
+	session := sessions[sessionToken]
+	senderID := session.id
 	if err != nil {
 		if err == http.ErrNoCookie {
 			http.Error(w, "No active session", http.StatusUnauthorized)
@@ -39,10 +34,13 @@ func Ws(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	sessionToken := c.Value
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println("Error upgrading connection:", err)
+		return
+	}
+	defer conn.Close()
 
-	session := sessions[sessionToken]
-	senderID := session.id
 	mu.Lock()
 	if clients[senderID] == nil {
 		clients[senderID] = []*websocket.Conn{}
@@ -89,15 +87,15 @@ func Ws(w http.ResponseWriter, r *http.Request) {
 		var followerName string
 		err = DB.QueryRow("SELECT nickname FROM users WHERE user_id = $1", senderID).Scan(&followerName)
 		if err != nil {
-			http.Error(w, "Follower not found", http.StatusInternalServerError)
+			// http.Error(w, "Follower not found", http.StatusInternalServerError)
 			return
 		}
 		// Prepare notification content
 		notificationContent := fmt.Sprintf("%s sent you a message.", followerName) // Adjust as necessary
 
 		hiddenInfo := fmt.Sprintf("%d", msg.ReceiverID)
-        _, err = DB.Exec("INSERT INTO notifications (user_id, type, content, sender_id, hidden_info) VALUES ($1, $2, $3, $4, $5)",
-            msg.ReceiverID, "message", notificationContent, senderID, hiddenInfo)
+		_, err = DB.Exec("INSERT INTO notifications (user_id, type, content, sender_id, hidden_info) VALUES ($1, $2, $3, $4, $5)",
+			msg.ReceiverID, "message", notificationContent, senderID, hiddenInfo)
 		if err != nil {
 			fmt.Println("Failed to create notification:", err)
 		}
@@ -132,7 +130,7 @@ func sendMessageToRecipient(msg *Message) {
 	recipientConns := clients[msg.ReceiverID]
 	for _, conn := range recipientConns {
 		err := conn.WriteJSON(msg)
-		sendNotificationCount(conn,count)
+		sendNotificationCount(conn, count)
 		Sendupdatednotification(conn, msg.ReceiverID)
 		if err != nil {
 			fmt.Println("Error sending message to recipient:", err)
