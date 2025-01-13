@@ -22,6 +22,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const subscribers = useRef<((data: any) => void)[]>([]);
+  const reconnectIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const subscribe = (callback: (data: any) => void) => {
     subscribers.current.push(callback);
@@ -30,7 +31,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
     };
   };
 
-  useEffect(() => {
+  const connectWebSocket = () => {
     const ws = new WebSocket("ws://localhost:8080/ws");
     setSocket(ws);
 
@@ -44,15 +45,27 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({
 
     ws.onclose = () => {
       console.log("WebSocket connection closed");
+      if (reconnectIntervalRef.current === null) {
+        reconnectIntervalRef.current = setInterval(connectWebSocket, 3000);
+      }
     };
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       subscribers.current.forEach(callback => callback(data));
     };
+  };
+
+  useEffect(() => {
+    connectWebSocket();
 
     return () => {
-      ws.close();
+      if (reconnectIntervalRef.current) {
+        clearInterval(reconnectIntervalRef.current);
+      }
+      if (socket) {
+        socket.close();
+      }
     };
   }, []);
 
