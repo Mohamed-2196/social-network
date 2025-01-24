@@ -15,6 +15,7 @@ const ChatContent = () => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selecteduser, setusser]= useState("Chat")
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
   const chaturl = `${serverUrl}/chatusers`;
   const searchParams = useSearchParams();
@@ -81,10 +82,11 @@ const ChatContent = () => {
     }
   };
 
-  const handleUserClick = (userId) => {
+  const handleUserClick = (userId,username) => {
     setSelectedUserId(userId);
     window.history.pushState({}, '', `/chat?userId=${userId}`);
     fetchMessages(userId);
+    setusser(username)
   };
 
   const sendMessage = () => {
@@ -143,7 +145,7 @@ const ChatContent = () => {
             <ul className={`menu menu-md rounded-box w-full h-200 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-base-200 text-gray-900'}`}>
               {Array.isArray(users) && users.length > 0 ? (
                 users.map(user => (
-                  <li key={user.user_id} onClick={() => handleUserClick(user.user_id)}>
+                  <li key={user.user_id} onClick={() => handleUserClick(user.user_id,user.nickname || user.first_name)}>
                     <a className="flex items-center cursor-pointer">
                       <Chatpic image={`${serverUrl}/uploads/${user.image}`} /> {user.nickname || user.first_name}
                     </a>
@@ -159,7 +161,7 @@ const ChatContent = () => {
         <div className={`w-[70%] p-4 flex flex-col h-full ${isDarkMode ? 'bg-gray-800' : 'bg-base-200'}`}>
           <div className={`card mb-4 border-2 rounded-lg ${isDarkMode ? 'bg-gray-700 text-white' : 'bg-base-200 border-gray-300 text-gray-900'}`}>
             <div className="card-body p-2">
-              <h2 className="card-title text-lg font-bold">Chat</h2>
+              <h2 className="card-title text-lg font-bold">{selecteduser}</h2>
             </div>
           </div>
 

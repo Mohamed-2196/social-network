@@ -207,156 +207,160 @@ export default function HomePage() {
         </aside>
 
         <main className="flex-grow">
-          <div className="flex justify-end mb-4">
-            <input
-              type="checkbox"
-              id="dark-mode-toggle"
-              className="hidden peer"
-              checked={isDarkMode}
-              onChange={handleToggleDarkMode}
-            />
-            <label
-              htmlFor="dark-mode-toggle"
-              className={`flex items-center justify-center w-12 h-12 rounded-full border ${
-                isDarkMode
-                  ? "border-gray-400 bg-gray-600"
-                  : "border-gray-300 bg-gray-200"
-              } cursor-pointer transition-all`}
+        <div
+  className={`card ${
+    isDarkMode ? "bg-gray-800" : "bg-base-100"
+  } shadow-xl mb-4`}
+>
+  <div
+    className={`card-body ${
+      isDarkMode ? "text-gray-200" : "text-gray-900"
+    }`}
+  >
+    {/* Heading and dark mode toggle in the same line */}
+    <div className="flex justify-between items-center">
+      <h2 className="card-title">What's on your mind?</h2>
+      <div>
+        <input
+          type="checkbox"
+          id="dark-mode-toggle"
+          className="hidden peer"
+          checked={isDarkMode}
+          onChange={handleToggleDarkMode}
+        />
+        <label
+          htmlFor="dark-mode-toggle"
+          className={`flex items-center justify-center w-12 h-12 rounded-full border ${
+            isDarkMode
+              ? "border-gray-400 bg-gray-600"
+              : "border-gray-300 bg-gray-200"
+          } cursor-pointer transition-all`}
+        >
+          {isDarkMode ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-6 h-6 text-yellow-400"
             >
-              {isDarkMode ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-6 h-6 text-yellow-400"
-                >
-                  <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-6 h-6 text-gray-700"
-                >
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              )}
-            </label>
-          </div>
+              <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-6 h-6 text-gray-700"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          )}
+        </label>
+      </div>
+    </div>
 
-          <div
-            className={`card ${
-              isDarkMode ? "bg-gray-800" : "bg-base-100"
-            } shadow-xl mb-4`}
-          >
-            <div
-              className={`card-body ${
-                isDarkMode ? "text-gray-200" : "text-gray-900"
-              }`}
-            >
-              <h2 className="card-title">What's on your mind?</h2>
-              <form onSubmit={handlePostSubmit}>
-                <textarea
-                  className={`textarea textarea-bordered w-full ${
-                    isDarkMode
-                      ? "bg-gray-700 text-gray-400"
-                      : "bg-white text-gray-900"
-                  }`}
-                  placeholder="Write something..."
-                  value={postData.content}
-                  onChange={(e) =>
-                    setPostData({ ...postData, content: e.target.value })
-                  }
-                ></textarea>
-                <div className="flex justify-between items-center mt-2">
-                  <div className="flex items-center gap-2">
-                    <label className="btn btn-outline btn-sm">
-                      <FaImage className="mr-2" />
-                      Upload Image
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={handleImageUpload}
-                        accept="image/*"
-                      />
-                    </label>
-                    {postData.image && (
-                      <span className="text-success">Image uploaded</span>
-                    )}
+    {/* Post creation form */}
+    <form onSubmit={handlePostSubmit}>
+      <textarea
+        className={`textarea textarea-bordered w-full ${
+          isDarkMode
+            ? "bg-gray-700 text-gray-400"
+            : "bg-white text-gray-900"
+        }`}
+        placeholder="Write something..."
+        value={postData.content}
+        onChange={(e) =>
+          setPostData({ ...postData, content: e.target.value })
+        }
+      ></textarea>
+      <div className="flex justify-between items-center mt-2">
+        <div className="flex items-center gap-2">
+          <label className="btn btn-outline btn-sm">
+            <FaImage className="mr-2" />
+            Upload Image
+            <input
+              type="file"
+              className="hidden"
+              onChange={handleImageUpload}
+              accept="image/*"
+            />
+          </label>
+          {postData.image && (
+            <span className="text-success">Image uploaded</span>
+          )}
+        </div>
+        <select
+          className={`select select-bordered select-sm ${
+            isDarkMode ? "bg-gray-700" : ""
+          }`}
+          value={postData.privacy}
+          onChange={(e) => {
+            const newPrivacy = e.target.value;
+            setPostData({ ...postData, privacy: newPrivacy });
+          }}
+        >
+          <option value="public">Public</option>
+          <option value="almost_private">Almost Private</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
+      {postData.privacy === "private" && (
+        <div className="mt-4">
+          <h3 className="font-semibold">Select Followers:</h3>
+          {followers.map((follower, index) => (
+            <label key={index} className="flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedFollowers.includes(follower.id)}
+                onChange={() => toggleFollowerSelection(follower.id)}
+                className="mr-2"
+              />
+              <div className="flex items-center gap-2">
+                <div className="avatar">
+                  <div className="w-10 rounded-full">
+                    <img
+                      src={`${serverUrl}/uploads/${follower.image}`}
+                      alt={`${follower.nickname}'s avatar`}
+                    />
                   </div>
-                  <select
-                    className={`select select-bordered select-sm ${
-                      isDarkMode ? "bg-gray-700" : ""
-                    }`}
-                    value={postData.privacy}
-                    onChange={(e) => {
-                      const newPrivacy = e.target.value;
-                      setPostData({ ...postData, privacy: newPrivacy });
-                    }}
-                  >
-                    <option value="public">Public</option>
-                    <option value="almost_private">Almost Private</option>
-                    <option value="private">Private</option>
-                  </select>
                 </div>
-                {postData.privacy === "private" && (
-                  <div className="mt-4">
-                    <h3 className="font-semibold">Select Followers:</h3>
-                    {followers.map((follower, index) => (
-                      <label key={index} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedFollowers.includes(follower.id)} // Ensure you're checking the ID
-                          onChange={() => toggleFollowerSelection(follower.id)} // Pass only the ID
-                          className="mr-2"
-                        />
-                        <div className="flex items-center gap-2">
-                          <div className="avatar">
-                            <div className="w-10 rounded-full">
-                              <img
-                                src={`${serverUrl}/uploads/${follower.image}`}
-                                alt={`${follower.nickname}'s avatar`}
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <div className="font-semibold">
-                              {follower.nickname}
-                            </div>
-                            <div>
-                              {follower.first_name} {follower.last_name}
-                            </div>
-                          </div>
-                        </div>
-                      </label>
-                    ))}
+                <div>
+                  <div className="font-semibold">
+                    {follower.nickname}
                   </div>
-                )}
-                <div className="card-actions justify-end mt-2">
-                  <button type="submit" className="btn btn-primary">
-                    Post
-                  </button>
+                  <div>
+                    {follower.first_name} {follower.last_name}
+                  </div>
                 </div>
-              </form>
-            </div>
-          </div>
+              </div>
+            </label>
+          ))}
+        </div>
+      )}
+      <div className="card-actions justify-end mt-2">
+        <button type="submit" className="btn btn-primary">
+          Post
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
           <div className="space-y-4">
             {posts.map((post) => (

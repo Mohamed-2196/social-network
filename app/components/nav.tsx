@@ -12,10 +12,14 @@ export default function Nav({ isDarkMode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [users, setUsers] = useState([]); // Store user data
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); 
-  const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
+  const [activePopup, setActivePopup] = useState(null); // Track active popup
   const router = useRouter();
   const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+
+  // Refs for popup containers
+  const profileMenuRef = useRef(null);
+  const chatMenuRef = useRef(null);
+  const searchResultsRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = subscribe((data) => {
@@ -70,6 +74,24 @@ export default function Nav({ isDarkMode }) {
     }
   }, [searchTerm, users]);
 
+  // Close popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) &&
+        (chatMenuRef.current && !chatMenuRef.current.contains(event.target)) &&
+        (searchResultsRef.current && !searchResultsRef.current.contains(event.target))
+      ) {
+        setActivePopup(null); // Close all popups
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleLogout = async () => {
     try {
       const response = await fetch(`${serverUrl}/logout`, {
@@ -113,11 +135,11 @@ export default function Nav({ isDarkMode }) {
   };
 
   const toggleProfileMenu = () => {
-    setIsProfileMenuOpen(!isProfileMenuOpen); // Toggle profile menu visibility
+    setActivePopup(activePopup === 'profile' ? null : 'profile');
   };
 
   const toggleChatMenu = () => {
-    setIsChatMenuOpen(!isChatMenuOpen); // Toggle chat menu visibility
+    setActivePopup(activePopup === 'chat' ? null : 'chat');
   };
 
   return (
@@ -140,24 +162,33 @@ export default function Nav({ isDarkMode }) {
           <input
             type="text"
             placeholder="Search users"
-            className={`input input-bordered w-24 md:w-auto ${isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-white text-gray-900'}`}
+            className={`input input-bordered w-24 md:w-auto ${
+              isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-white text-gray-900'
+            }`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           {filteredUsers.length > 0 && (
-            <div className={`absolute mt-1 w-full ${isDarkMode ? 'bg-gray-700' : 'bg-white'} border rounded-md shadow-lg z-20`}>
-              {filteredUsers.map(user => (
+            <div
+              ref={searchResultsRef}
+              className={`absolute top-12 w-full ${
+                isDarkMode ? 'bg-gray-700' : 'bg-white'
+              } border rounded-md shadow-lg z-20`}
+            >
+              {filteredUsers.map((user) => (
                 <button
                   key={user.id}
                   className="block px-4 py-2 hover:bg-indigo-100 w-full text-left flex items-center"
                   onClick={() => handleUserClick(user.id)}
                 >
                   <img
-                    src={serverUrl + "/uploads/" + user.avatar}
+                    src={serverUrl + '/uploads/' + user.avatar}
                     alt={`${user.first_name} ${user.last_name}`}
                     className="w-8 h-8 rounded-full mr-2"
                   />
-                  <span>{user.first_name} {user.last_name}</span>
+                  <span>
+                    {user.first_name} {user.last_name}
+                  </span>
                 </button>
               ))}
             </div>
@@ -180,8 +211,9 @@ export default function Nav({ isDarkMode }) {
           >
             <FaUser />
           </button>
-          {isProfileMenuOpen && (
+          {activePopup === 'profile' && (
             <div
+              ref={profileMenuRef}
               className={`absolute right-0 mt-2 w-48 ${
                 isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-white text-gray-900'
               } border rounded-md shadow-lg z-20`}
@@ -205,8 +237,9 @@ export default function Nav({ isDarkMode }) {
           <button onClick={toggleChatMenu} className="btn btn-ghost btn-circle">
             <FaComments />
           </button>
-          {isChatMenuOpen && (
+          {activePopup === 'chat' && (
             <div
+              ref={chatMenuRef}
               className={`absolute right-0 mt-2 w-48 ${
                 isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-white text-gray-900'
               } border rounded-md shadow-lg z-20`}

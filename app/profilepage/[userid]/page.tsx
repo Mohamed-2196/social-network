@@ -228,35 +228,42 @@ export default function UserProfilePage() {
                 </div>
               </div>
               <div className="absolute top-4 right-4">
-                {userInfo.followStatus === 'following' ? (
-                  <>
-                    <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
-                      Following
-                    </button>
-                    <button
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 ml-2"
-                      onClick={handleUnfollow}
-                    >
-                      Unfollow
-                    </button>
-                  </>
-                ) : userInfo.followStatus === 'request_sent' ? (
-                  <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
-                    Follow Request Sent
-                  </button>
-                ) : (
-                  <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300 mr-2" onClick={handleFollow}>
-                    <FaUserPlus className="inline mr-1" /> Follow
-                  </button>
-                )}
-                <button 
-                  onClick={() => handleNavigateToChat(userid)} 
-                  className={`bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 ${!userInfo.chat ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                  disabled={!userInfo.chat}
-                >
-                  <FaComments className="inline mr-1" /> Chat
-                </button>
-              </div>
+  <div className="flex items-center gap-2">
+    {userInfo.followStatus === 'following' ? (
+      <>
+        <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
+          Following
+        </button>
+        <button
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+          onClick={handleUnfollow}
+        >
+          Unfollow
+        </button>
+      </>
+    ) : userInfo.followStatus === 'request_sent' ? (
+      <button className="bg-gray-500 text-white px-4 py-2 rounded" disabled>
+        Follow Request Sent
+      </button>
+    ) : (
+      <button
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+        onClick={handleFollow}
+      >
+        <FaUserPlus className="inline mr-1" /> Follow
+      </button>
+    )}
+    <button
+      onClick={() => handleNavigateToChat(userid)}
+      className={`bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 ${
+        !userInfo.chat ? 'opacity-50 cursor-not-allowed' : ''
+      }`}
+      disabled={!userInfo.chat}
+    >
+      <FaComments className="inline mr-1" /> Chat
+    </button>
+  </div>
+</div>
             </div>
           </div>
           <div className="px-8 py-4 bg-gray-50">
