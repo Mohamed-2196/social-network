@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Social Network
 
-## Getting Started
+This project is a Facebook-like social network that includes features such as followers, profiles, posts, groups, notifications, and chats. The application is containerized using Docker, with separate containers for the backend and frontend. Below is a detailed guide on how to set up and run the project using Docker Compose.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### User Authentication
+- **Registration**: Users can register with email, password, first name, last name, and optional fields like avatar, nickname, and "About Me."
+- **Login**: Users can log in using their email and password. Sessions and cookies are used to keep users logged in.
+- **Logout**: Users can log out at any time.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Profile
+- **Public/Private Profiles**: Users can toggle their profile between public and private.
+- **User Information**: Displays user details, posts, followers, and following users.
+- **Followers**: Users can follow/unfollow other users. Follow requests are required for private profiles.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Posts
+- **Create Posts**: Users can create posts with text and optional images/GIFs.
+- **Post Privacy**: Posts can be public, visible only to followers, or visible to specific followers.
+- **Comments**: Users can comment on posts.
 
-## Learn More
+### Groups
+- **Create Groups**: Users can create groups with a title and description.
+- **Group Invitations**: Group creators can invite users, and users can request to join groups.
+- **Group Posts and Events**: Group members can create posts and events within the group.
 
-To learn more about Next.js, take a look at the following resources:
+### Chats
+- **Private Messages**: Users can send private messages to users they follow or who follow them.
+- **Group Chats**: Groups have a common chat room for members.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Notifications
+- **Real-Time Notifications**: Users receive notifications for follow requests, group invitations, and event creations.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## How to Run the Project with Docker Compose
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Prerequisites
+- Docker and Docker Compose installed on your machine.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Steps
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/Mohamed-2196/social-network.git
+   cd social-network
+   ```
+
+
+2. **Build and Run the Docker Containers**:
+   Run the following command to build and start the backend and frontend containers:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Access the Application**:
+   - Frontend: Open your browser and go to `http://localhost:3000`.
+   - Backend: The backend API will be available at `http://localhost:8080`.
+
+4. **Stop the Containers**:
+   To stop the containers, use:
+   ```bash
+   docker-compose down
+   ```
