@@ -14,7 +14,8 @@ type UserInfo struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Nickname  string `json:"nickname"`
-	Image     string `json:"image"` // Pointer to handle null values
+	Image     string `json:"image"`
+	IsOnline  bool   `json:"is_online"`
 }
 
 type Message struct {
@@ -120,6 +121,13 @@ func GetChatUsers(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Row scan error:", err)
 			return
 		}
+
+		// Check if user is online (has active WebSocket connection)
+		mu.Lock()
+		_, isOnline := clients[user.UserID]
+		mu.Unlock()
+		user.IsOnline = isOnline
+
 		users = append(users, user)
 	}
 

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Network Messenger</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <!-- Connection Status Banner -->
+  <div id="offline-banner" class="offline-banner" style="display: none;">
+    <span>⚠️ You are offline. Messages will not be sent or received.</span>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Messenger</h1>
+        <div class="header-actions">
+          <button id="test-notification-btn" class="icon-btn" title="Test Notification" style="font-size: 18px;">🔔</button>
+          <button id="logout-btn" class="icon-btn" title="Logout">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-container">
+        <input type="text" id="user-search" placeholder="Search conversations..." />
+      </div>
+
+      <!-- User List -->
+      <div class="user-list" id="user-list">
+        <div class="loading">Loading users...</div>
+      </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main class="chat-area">
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state">
+        <h2>Welcome to Social Network Messenger</h2>
+        <p>Select a conversation to start chatting</p>
+      </div>
+
+      <!-- Chat Container -->
+      <div id="chat-container" class="chat-container" style="display: none;">
+        <!-- Chat Header -->
+        <div class="chat-header">
+          <div class="chat-user-info">
+            <div class="user-avatar" id="chat-avatar"></div>
+            <div>
+              <h3 id="chat-username">User Name</h3>
+              <span class="user-status" id="chat-status">Online</span>
+            </div>
+          </div>
+          <div class="chat-actions">
+            <button id="search-toggle-btn" class="icon-btn" title="Search messages">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div id="message-search-bar" class="message-search-bar" style="display: none;">
+          <input type="text" id="message-search" placeholder="Search messages..." />
+          <button id="search-close-btn" class="icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Messages -->
+        <div class="messages-container" id="messages-container">
+          <div class="messages-loading">Loading messages...</div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="message-input-container">
+          <button id="emoji-btn" class="icon-btn" title="Add emoji">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+              <line x1="9" y1="9" x2="9.01" y2="9"></line>
+              <line x1="15" y1="9" x2="15.01" y2="9"></line>
+            </svg>
+          </button>
+
+          <!-- Emoji Picker -->
+          <div id="emoji-picker" class="emoji-picker">
+            <div class="emoji-header">
+              <span>Emojis</span>
+              <button id="emoji-close-btn" class="close-btn">×</button>
+            </div>
+            <div class="emoji-grid" id="emoji-grid"></div>
+          </div>
+
+          <input
+            type="text"
+            id="message-input"
+            placeholder="Type a message..."
+            autocomplete="off"
+            disabled
+          />
+          <button id="send-btn" class="send-btn" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
